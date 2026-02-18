@@ -12,7 +12,7 @@ COPY apps/api/ apps/api/
 RUN pnpm -F @exort/api build
 RUN mkdir -p /app/db-bundle && \
     echo '{"name":"@exort/db","type":"module","main":"index.js"}' > /app/db-bundle/package.json && \
-    npx esbuild packages/db/src/index.ts --bundle --format=esm --platform=node --outfile=/app/db-bundle/index.js '--external:@prisma/*'
+    pnpm exec esbuild packages/db/src/index.ts --bundle --format=esm --platform=node --outfile=/app/db-bundle/index.js '--external:@prisma/*'
 
 # Stage 2: Production dependencies
 FROM base AS deps
