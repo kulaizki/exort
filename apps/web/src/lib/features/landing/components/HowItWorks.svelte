@@ -5,23 +5,20 @@
 		{
 			number: '01',
 			title: 'Connect',
-			description:
-				'Link your Lichess account. Public games are synced automatically — no tokens needed.',
-			detail: 'Delta sync — only new games are fetched'
+			description: 'Link your Lichess account. Public games are synced automatically.',
+			bullets: ['Delta sync — only new games', 'No OAuth tokens required', 'All time controls supported']
 		},
 		{
 			number: '02',
 			title: 'Analyze',
-			description:
-				'Stockfish 18 evaluates every move at depth 20. Accuracy, blunders, and openings — computed automatically.',
-			detail: 'Centipawn loss, phase errors, and more'
+			description: 'Stockfish 18 evaluates every move at depth 20. Fully automated.',
+			bullets: ['Centipawn loss per move', 'Blunder and mistake detection', 'Opening classification']
 		},
 		{
 			number: '03',
 			title: 'Improve',
-			description:
-				'Ask the AI coach about your weaknesses, patterns, and progress. Advice grounded in your real data.',
-			detail: 'Powered by structured RAG — not generic tips'
+			description: 'Ask the AI coach anything about your play. Grounded in your real data.',
+			bullets: ['Structured RAG — not generic tips', 'Weakness and pattern analysis', 'Personalized training plans']
 		}
 	];
 </script>
@@ -54,14 +51,25 @@
 					class="fade-up relative rounded border border-neutral-700 bg-neutral-950 p-6 transition-colors hover:border-gold/20"
 					style="--delay: {i * 0.15}s"
 				>
+						<!-- Number badge -->
 					<div
-						class="mb-4 flex size-10 items-center justify-center rounded-sm border border-gold/20 bg-neutral-900 text-sm font-bold text-gold"
+						class="relative mb-4 flex size-10 items-center justify-center rounded-full border border-gold/20 bg-gold/10 text-sm font-bold text-gold"
 					>
 						{step.number}
 					</div>
+
 					<h3 class="mb-2 text-lg font-semibold text-white">{step.title}</h3>
-					<p class="mb-3 text-sm leading-relaxed text-neutral-400">{step.description}</p>
-					<p class="text-xs text-gold/70">{step.detail}</p>
+					<p class="mb-4 text-sm leading-relaxed text-neutral-400">{step.description}</p>
+
+					<!-- Detail bullets -->
+					<div class="space-y-2 border-t border-neutral-700/50 pt-4">
+						{#each step.bullets as bullet}
+							<div class="flex items-center gap-2 text-xs text-neutral-400">
+								<span class="size-1 shrink-0 rounded-full bg-gold/60"></span>
+								{bullet}
+							</div>
+						{/each}
+					</div>
 				</div>
 			{/each}
 		</div>
