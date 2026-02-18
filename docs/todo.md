@@ -17,6 +17,9 @@
 - [x] Tailwind CSS 4, ESLint, Prettier configured
 - [x] Better Auth + Prisma adapter wired up
 - [x] `.env.example` with placeholder DB URL
+- [x] Feature-based frontend structure (`lib/features/`, barrel exports)
+- [x] Branding guide + gold theme + Manrope font
+- [x] `CLAUDE.md` project conventions
 
 ## Phase 2: Local Dev + Database Schema
 
@@ -37,16 +40,16 @@
 - [ ] Add indexes (games.user_id, games.lichess_game_id, analysis_jobs.status, game_metrics.game_id)
 - [ ] Seed script for dev data (optional)
 
-## Phase 2.5: Landing Page
+## Phase 2.5: Landing Page ✅
 
-- [ ] Public landing page (`/` route)
-  - [ ] Header (logo, nav, sign in / sign up CTAs)
-  - [ ] Hero section (tagline, CTA, visual)
-  - [ ] Features section (sync, analysis, coaching)
-  - [ ] How it works (step-by-step flow)
-  - [ ] Final CTA (sign up)
-  - [ ] Footer (links, copyright)
-- [ ] Follow branding guide (dark + yellow, Manrope, xs radius)
+- [x] Public landing page (`/` route)
+  - [x] Header (floating nav, logo, centered links, sign in / get started CTAs)
+  - [x] Hero section (tagline, CTA)
+  - [x] Features section (sync, analysis, coaching)
+  - [x] How it works (3-step flow)
+  - [x] Final CTA (sign up)
+  - [x] Footer (brand, link columns, GitHub, copyright)
+- [x] Follow branding guide (dark + gold, Manrope, xs radius)
 
 ## Phase 3: Auth + Lichess Connect (Web)
 
@@ -237,3 +240,4 @@
 
 - [x] **Shared `packages/db`** — single Prisma schema consumed by both `web` and `api`
 - [x] **Coolify** — self-hosted PaaS for VPS (Postgres, worker), reverse proxy + SSL
+- [x] **Feature-based frontend** — `lib/features/[name]/` with two-level barrel exports, thin route files
