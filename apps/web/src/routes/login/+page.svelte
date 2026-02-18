@@ -6,7 +6,7 @@
 </script>
 
 <svelte:head>
-	<title>Sign In | exort</title>
+	<title>sign in — exort</title>
 </svelte:head>
 
 <LoginPage {form} />

@@ -3,7 +3,14 @@
 </script>
 
 <svelte:head>
-	<title>exort — Turn every game into a lesson</title>
+	<title>exort</title>
+	<meta name="description" content="sync your lichess games, analyze with stockfish, and get ai-powered coaching to improve your chess." />
+	<meta property="og:title" content="exort" />
+	<meta property="og:description" content="sync your lichess games, analyze with stockfish, and get ai-powered coaching to improve your chess." />
+	<meta property="og:type" content="website" />
+	<meta name="twitter:card" content="summary" />
+	<meta name="twitter:title" content="exort" />
+	<meta name="twitter:description" content="sync your lichess games, analyze with stockfish, and get ai-powered coaching to improve your chess." />
 </svelte:head>
 
 <Header />
