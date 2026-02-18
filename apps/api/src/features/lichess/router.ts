@@ -1,10 +1,6 @@
 import { Router } from 'express';
 import { LichessService } from './service.js';
-import { z } from 'zod';
-
-const connectBody = z.object({
-  lichessUsername: z.string().min(1).max(50)
-});
+import { connectBody } from './schema.js';
 
 export const lichessRouter = Router();
 
