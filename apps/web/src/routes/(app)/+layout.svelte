@@ -2,16 +2,13 @@
 	import { Sidebar } from '$lib/features/dashboard';
 
 	let { data, children } = $props();
-	let collapsed = $state(false);
 	let mobileOpen = $state(false);
 </script>
 
 <div class="min-h-screen bg-neutral-950">
 	<Sidebar
 		user={data.user}
-		{collapsed}
 		{mobileOpen}
-		onToggle={() => (collapsed = !collapsed)}
 		onMobileClose={() => (mobileOpen = false)}
 	/>
 
@@ -31,7 +28,7 @@
 	</div>
 
 	<!-- Main content -->
-	<main class="transition-all duration-200 {collapsed ? 'lg:ml-16' : 'lg:ml-56'}">
+	<main class="lg:ml-56">
 		<div class="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:px-8">
 			{@render children()}
 		</div>
