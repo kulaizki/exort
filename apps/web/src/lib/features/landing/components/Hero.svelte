@@ -3,28 +3,20 @@
 </script>
 
 <section class="relative flex min-h-screen items-center justify-center overflow-hidden pt-16">
-	<!-- Subtle grid background -->
-	<div
-		class="pointer-events-none absolute inset-0 opacity-[0.03]"
-		style="background-image: url(&quot;data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='1'%3E%3Cpath d='M60 0H0v1h60z M0 0v60h1V0z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E&quot;)"
-	></div>
-
-	<!-- Glow orb -->
+	<!-- Subtle radial glow -->
 	<div class="pointer-events-none absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2">
-		<div class="h-[500px] w-[500px] rounded-full bg-gold/8 blur-[120px]"></div>
+		<div class="h-[600px] w-[600px] rounded-full bg-gold/6 blur-[150px]"></div>
 	</div>
 
-	<div class="relative mx-auto max-w-6xl px-6 text-center">
+	<div class="relative mx-auto max-w-3xl px-6 text-center">
 		<div use:inview class="fade-up space-y-6">
-			<!-- Headline -->
-			<h1 class="text-4xl font-bold tracking-tight text-white sm:text-5xl lg:text-6xl">
+			<h1 class="text-4xl font-bold tracking-tight text-white sm:text-5xl lg:text-6xl xl:text-7xl">
 				Turn every game into
 				<br />
 				<span class="text-gold">a lesson</span>
 			</h1>
 
-			<!-- Subheadline -->
-			<p class="mx-auto max-w-2xl text-lg text-neutral-400">
+			<p class="mx-auto max-w-xl text-lg text-neutral-400">
 				Exort syncs your Lichess games, analyzes them with Stockfish, and coaches you
 				with AI — so you improve faster.
 			</p>
@@ -43,7 +35,11 @@
 						stroke="currentColor"
 						stroke-width="2"
 					>
-						<path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+						<path
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							d="M13 7l5 5m0 0l-5 5m5-5H6"
+						/>
 					</svg>
 				</a>
 				<a
@@ -52,6 +48,22 @@
 				>
 					Learn More
 				</a>
+			</div>
+
+			<!-- Tech specs -->
+			<div class="flex justify-center divide-x divide-neutral-700 pt-6">
+				<div class="pr-6">
+					<div class="text-sm font-semibold text-white">Stockfish 18</div>
+					<div class="text-xs text-neutral-400">Latest engine</div>
+				</div>
+				<div class="px-6">
+					<div class="text-sm font-semibold text-white">Depth 20</div>
+					<div class="text-xs text-neutral-400">Analysis depth</div>
+				</div>
+				<div class="pl-6">
+					<div class="text-sm font-semibold text-white">Gemini AI</div>
+					<div class="text-xs text-neutral-400">Coaching model</div>
+				</div>
 			</div>
 		</div>
 	</div>
