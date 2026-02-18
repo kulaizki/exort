@@ -9,12 +9,13 @@ COPY apps/web/package.json apps/web/
 RUN pnpm install --frozen-lockfile
 COPY apps/web/ apps/web/
 RUN pnpm -F @exort/web build
+RUN pnpm deploy --filter @exort/web --prod /app/deploy
 
 FROM base AS runtime
 WORKDIR /app
+COPY --from=build /app/deploy/node_modules ./node_modules
 COPY --from=build /app/apps/web/build ./build
-COPY --from=build /app/apps/web/package.json ./
-COPY --from=build /app/node_modules ./node_modules
+COPY --from=build /app/deploy/package.json ./
 ENV NODE_ENV=production
 ENV PORT=3000
 EXPOSE 3000
