@@ -2,12 +2,12 @@
 
 ## Architecture
 
-- **Web:** SvelteKit 2.52 + Svelte 5 + Tailwind 4 + Better Auth + Prisma 7 → Cloud Run
-- **API:** Express + TypeScript + Prisma 7 → Cloud Run
-- **Sync:** Node.js + TypeScript — Lichess delta sync → Cloud Run
-- **Worker:** Python + Stockfish 18 + chess library → VPS (Docker)
-- **Database:** PostgreSQL 16 → VPS
-- **AI:** Vertex AI Gemini 2.5 Flash — structured SQL RAG
+- **Web:** SvelteKit 2.52 + Svelte 5 + Tailwind 4 + Better Auth + Prisma 7 → Coolify VPS
+- **API:** Express + TypeScript + Prisma 7 → Coolify VPS
+- **Sync:** Node.js + TypeScript — Lichess delta sync → Coolify VPS
+- **Worker:** Python + Stockfish 18 + chess library → Coolify VPS
+- **Database:** PostgreSQL 16 → Coolify VPS
+- **AI:** Vertex AI Gemini 2.5 Flash — structured SQL RAG (GCP)
 
 ## Phase 1: Foundation ✅
 
@@ -251,29 +251,29 @@ Feature module: `$lib/features/coach/`. Route: `/coach`.
 
 ## Phase 9: Deploy
 
-- [ ] Deploy `web` to Cloud Run:
-  - [ ] Dockerfile or adapter-auto
-  - [ ] Environment variables (DATABASE_URL, BETTER_AUTH_SECRET, ORIGIN)
+All services on Coolify VPS. Only Vertex AI on GCP.
+
+- [x] Deploy `exort-postgres` on Coolify VPS:
+  - [x] PostgreSQL 16 (postgres:16-alpine, strong password, persistent volume)
+  - [x] Port mapping `5433:5432` for remote `prisma db push` — remove after setup
+  - [x] Run `prisma db push` against remote DB to create tables
+- [x] Deploy `exort-worker` on Coolify VPS:
+  - [x] GitHub repo, Dockerfile build pack, base dir `/apps/worker`
+  - [x] Environment variables (DATABASE_URL internal, ANALYSIS_DEPTH, POLL_INTERVAL, MAX_CONCURRENT)
+- [ ] Deploy `exort-web` on Coolify VPS:
+  - [ ] GitHub repo, Dockerfile build pack, base dir `/apps/web`
+  - [ ] Environment variables (DATABASE_URL, BETTER_AUTH_SECRET, BETTER_AUTH_URL, ORIGIN)
   - [ ] Domain: `exort.fitzsixto.com`
-- [ ] Deploy `api` to Cloud Run:
-  - [ ] Dockerfile (Express + Node.js)
-  - [ ] Environment variables (DATABASE_URL, VERTEX_AI config, CORS)
+- [ ] Deploy `exort-api` on Coolify VPS:
+  - [ ] GitHub repo, Dockerfile build pack, base dir `/apps/api`
+  - [ ] Environment variables (DATABASE_URL, VERTEX_AI config, CORS_ORIGIN)
   - [ ] Domain: `api.exort.fitzsixto.com`
-- [ ] Deploy `sync` to Cloud Run:
-  - [ ] Dockerfile
-  - [ ] Cloud Scheduler trigger (optional)
-- [ ] Deploy on Coolify VPS:
-  - [ ] PostgreSQL 16 (strong password, restricted access, backup strategy)
-  - [ ] `worker` — Docker with Stockfish binary, CPU quotas
-  - [ ] Coolify reverse proxy + SSL
-  - [ ] Cloud Run services connect to VPS Postgres over public IP (no Cloud SQL needed)
-- [ ] Terraform IaC:
-  - [ ] Cloud Run services, Artifact Registry
-  - [ ] Environment variables and IAM roles
-- [ ] CI/CD (GitHub Actions):
-  - [ ] Build + deploy Cloud Run services on push to main
-  - [ ] Per-service triggers (only redeploy changed services)
-  - [ ] Coolify webhook or manual deploy for VPS services
+- [ ] Deploy `exort-sync` on Coolify VPS:
+  - [ ] GitHub repo, Dockerfile build pack, base dir `/apps/sync`
+  - [ ] Environment variables (DATABASE_URL)
+  - [ ] No domain needed (triggered by API internally)
+- [ ] Coolify reverse proxy + SSL (wildcard `*.fitzsixto.com`)
+- [ ] CI/CD: Coolify GitHub webhook auto-deploy on push to main
 - [ ] End-to-end smoke test on production
 
 ## Phase 10: Testing
@@ -331,11 +331,10 @@ Tests colocated with features: `features/[name]/__tests__/[name].test.ts`
 - [x] **Postgres-backed job queue** — poll-based with `FOR UPDATE SKIP LOCKED`, no extra infra needed
 - [x] **Structured SQL RAG** — chess metrics are structured, not prose
 - [x] **Gemini 2.5 Flash** — long context, low latency, cost-effective
-- [x] **Hybrid deploy** — Cloud Run (stateless) + Coolify VPS (Postgres + Stockfish worker)
-- [x] **Terraform** — IaC for all GCP resources
+- [x] **All-in-one VPS deploy** — all services on Coolify VPS, only Vertex AI on GCP
 
 - [x] **Shared `packages/db`** — single Prisma schema consumed by both `web` and `api`
-- [x] **Coolify** — self-hosted PaaS for VPS (Postgres, worker), reverse proxy + SSL
+- [x] **Coolify** — self-hosted PaaS for all services (reverse proxy, SSL, GitHub webhook deploys)
 - [x] **Feature-based structure** — `features/[name]/` with barrel exports, both frontend and backend
 - [x] **Vitest over Jest** — native ESM, faster (Vite pipeline), same API, consistent across all TS services
 - [x] **supertest** — HTTP assertion lib for Express integration tests (pairs with Vitest, not a replacement)

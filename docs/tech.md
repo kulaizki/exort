@@ -2,12 +2,12 @@
 
 ## Architecture
 
-- **Web:** SvelteKit 2.52 + Svelte 5 + Tailwind 4 + Better Auth + Prisma 7 (Cloud Run)
-- **API:** Express + TypeScript + Prisma ORM (Cloud Run)
-- **Sync:** Node.js + TypeScript — Lichess delta sync service (Cloud Run)
-- **Worker:** Python + Stockfish 18 + chess library — CPU-bound analysis (VPS)
+- **Web:** SvelteKit 2.52 + Svelte 5 + Tailwind 4 + Better Auth + Prisma 7 (Coolify VPS)
+- **API:** Express + TypeScript + Prisma ORM (Coolify VPS)
+- **Sync:** Node.js + TypeScript — Lichess delta sync service (Coolify VPS)
+- **Worker:** Python + Stockfish 18 + chess library — CPU-bound analysis (Coolify VPS)
 - **Database:** PostgreSQL 16 (Coolify VPS)
-- **AI:** Vertex AI Gemini 2.5 Flash — structured RAG via SQL retrieval
+- **AI:** Vertex AI Gemini 2.5 Flash — structured RAG via SQL retrieval (GCP)
 
 ---
 
@@ -129,34 +129,38 @@ Why structured SQL over vector embeddings:
 
 ---
 
-## Deployment Model (Hybrid)
+## Deployment Model (All-in-One VPS)
 
-### GCP (Cloud Run) — Stateless / Elastic
+All services deployed on a single **Coolify VPS**. Only external dependency is GCP Vertex AI for RAG chat.
 
-| Service | Image | Scaling |
-|---------|-------|---------|
-| `web`   | SvelteKit + adapter-auto | 0-N instances |
-| `api`   | Express + Node.js | 0-N instances |
-| `sync`  | Node.js scheduled/triggered | 0-1 instances |
+### Coolify VPS
 
-### Coolify VPS — Compute + Data Layer
+| Service | Domain | Notes |
+|---------|--------|-------|
+| `exort-web` | `exort.fitzsixto.com` | SvelteKit + adapter-node |
+| `exort-api` | `api.exort.fitzsixto.com` | Express + Node.js |
+| `exort-sync` | (no domain — triggered by API) | Node.js sync service |
+| `exort-worker` | (no domain — polls DB) | Python + Stockfish 18 |
+| `exort-postgres` | (internal only) | PostgreSQL 16 |
+
+### GCP (Vertex AI only)
 
 | Service | Notes |
 |---------|-------|
-| PostgreSQL 16 | Primary database (Coolify-managed) |
-| `worker` | Python + Stockfish 18 (Docker, CPU-limited) |
+| Vertex AI Gemini 2.5 Flash | RAG chat — structured SQL retrieval + coaching response |
 
 Managed via **Coolify** (self-hosted PaaS):
-- One-click Postgres deploy with backups
-- Docker-based worker deployment with resource limits
-- Built-in reverse proxy (Traefik) + automatic SSL
-- GitHub webhook deploys for VPS services
+- One-click Postgres deploy with persistent volumes + backups
+- GitHub repo-based deploys for all services (Dockerfile build pack)
+- Internal Docker networking between services (no public DB exposure)
+- Built-in reverse proxy (Traefik) + automatic SSL via wildcard `*.fitzsixto.com`
+- GitHub webhook deploys for auto-redeploy on push
 
 Rationale:
-- Cloud Run: scale-to-zero, easy deploy, free tier for low traffic
-- Coolify VPS: Stockfish is CPU-bound, more cost-effective on fixed compute
-- Postgres near worker: reduces network overhead, predictable costs
+- Single infrastructure to manage — no Cloud Run config/billing
+- All services on same network — fast internal communication
 - Coolify simplifies VPS ops without Kubernetes overhead
+- Can migrate stateless services to Cloud Run later if scaling is needed
 
 ---
 
@@ -235,6 +239,6 @@ Patterns:
 - [x] **Postgres-backed job queue** — no extra infra, ACID transactional enqueue
 - [x] **Structured SQL RAG** — chess metrics are structured data, not prose
 - [x] **Gemini 2.5 Flash** — long context, low latency, cost-effective for chat
-- [x] **Hybrid deploy** — Cloud Run for stateless, Coolify VPS for compute + data
+- [x] **All-in-one VPS deploy** — all services on Coolify VPS, only Vertex AI on GCP
 
-- [x] **Coolify** — self-hosted PaaS for VPS management (Postgres, worker, reverse proxy, SSL)
+- [x] **Coolify** — self-hosted PaaS for VPS management (all services, reverse proxy, SSL)
