@@ -1,9 +1,11 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
+	import { goto, invalidateAll } from '$app/navigation';
+	import { enhance } from '$app/forms';
 	import { page } from '$app/state';
 	import { EmptyState } from '$lib/features/dashboard';
 
-	let { data } = $props();
+	let { data, form } = $props();
+	let syncing = $state(false);
 
 	function applyFilter(key: string, value: string) {
 		const params = new URLSearchParams(page.url.searchParams);
@@ -31,7 +33,36 @@
 			<h1 class="text-lg font-semibold text-neutral-200">Games</h1>
 			<p class="mt-1 text-sm text-neutral-500">{data.total} games synced</p>
 		</div>
+		<form method="post" action="?/sync" use:enhance={() => {
+			syncing = true;
+			return async ({ update }) => {
+				await update();
+				syncing = false;
+				await invalidateAll();
+			};
+		}}>
+			<button
+				type="submit"
+				disabled={syncing}
+				class="inline-flex cursor-pointer items-center gap-2 rounded-sm bg-gold px-3 py-1.5 text-xs font-semibold text-neutral-950 transition-colors hover:bg-gold-light disabled:cursor-not-allowed disabled:opacity-50"
+			>
+				<svg class="h-3.5 w-3.5 {syncing ? 'animate-spin' : ''}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg>
+				{syncing ? 'Syncing...' : 'Sync Games'}
+			</button>
+		</form>
 	</div>
+
+	{#if form?.synced}
+		<div class="rounded-sm border border-green-500/20 bg-green-500/10 px-4 py-2.5 text-sm text-green-400">
+			Games synced successfully.
+		</div>
+	{/if}
+
+	{#if form?.syncError}
+		<div class="rounded-sm border border-red-500/20 bg-red-500/10 px-4 py-2.5 text-sm text-red-400">
+			{form.syncError}
+		</div>
+	{/if}
 
 	<!-- Filters -->
 	<div class="flex flex-wrap gap-2">

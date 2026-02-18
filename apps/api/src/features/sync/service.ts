@@ -1,7 +1,17 @@
-// Sync trigger — calls the sync service
+import { config } from '../../config/index.js';
+
 export class SyncService {
   static async triggerSync(userId: string) {
-    // TODO: Call sync service via HTTP or Pub/Sub
-    return { message: 'Sync triggered', userId };
+    const res = await fetch(`${config.SYNC_SERVICE_URL}/sync/${userId}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' }
+    });
+
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      throw new Error(body.error || `Sync service returned ${res.status}`);
+    }
+
+    return res.json();
   }
 }

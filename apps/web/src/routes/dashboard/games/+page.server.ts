@@ -1,5 +1,6 @@
-import type { PageServerLoad } from './$types';
+import type { PageServerLoad, Actions } from './$types';
 import { api } from '$lib/server/api';
+import { fail } from '@sveltejs/kit';
 
 export const load: PageServerLoad = async (event) => {
 	const token = event.locals.session!.token;
@@ -7,7 +8,7 @@ export const load: PageServerLoad = async (event) => {
 
 	const params = new URLSearchParams();
 	params.set('page', url.searchParams.get('page') || '1');
-	params.set('limit', url.searchParams.get('limit') || '20');
+	params.set('limit', url.searchParams.get('limit') || '16');
 	if (url.searchParams.get('timeControl')) params.set('timeControl', url.searchParams.get('timeControl')!);
 	if (url.searchParams.get('result')) params.set('result', url.searchParams.get('result')!);
 	if (url.searchParams.get('sort')) params.set('sort', url.searchParams.get('sort')!);
@@ -27,4 +28,17 @@ export const load: PageServerLoad = async (event) => {
 			order: url.searchParams.get('order') || 'desc'
 		}
 	};
+};
+
+export const actions: Actions = {
+	sync: async (event) => {
+		const token = event.locals.session!.token;
+		const res = await api('/sync/trigger', token, { method: 'POST' });
+
+		if (res.error) {
+			return fail(400, { syncError: res.error });
+		}
+
+		return { synced: true };
+	}
 };

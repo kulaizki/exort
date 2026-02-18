@@ -12,7 +12,7 @@ export class ProfileService {
       select: { lichessUsername: true, lastSyncedAt: true }
     });
 
-    return { ...user, lichess };
+    return { user, lichessAccount: lichess };
   }
 
   static async update(userId: string, data: { name?: string; email?: string }) {
