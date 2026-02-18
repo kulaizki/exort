@@ -1,0 +1,20 @@
+{
+	"name": "exort",
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"dev": "concurrently -n web -c cyan \"pnpm dev:web\"",
+		"dev:web": "pnpm -F @exort/web dev",
+		"build": "pnpm -F @exort/web build",
+		"check": "pnpm -F @exort/web check",
+		"lint": "pnpm -F @exort/web lint",
+		"format": "pnpm -F @exort/web format"
+	},
+	"packageManager": "pnpm@10.28.2",
+	"engines": {
+		"node": ">=20"
+	},
+	"devDependencies": {
+		"concurrently": "^9.2.1"
+	}
+}
