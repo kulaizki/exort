@@ -21,6 +21,29 @@
 	function formatDate(dateStr: string) {
 		return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 	}
+
+	function pageUrl(p: number) {
+		const params = new URLSearchParams(page.url.searchParams);
+		params.set('page', String(p));
+		return `?${params.toString()}`;
+	}
+
+	function getPageNumbers(current: number, total: number): (number | '...')[] {
+		if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+
+		const pages: (number | '...')[] = [1];
+
+		if (current > 3) pages.push('...');
+
+		const start = Math.max(2, current - 1);
+		const end = Math.min(total - 1, current + 1);
+		for (let i = start; i <= end; i++) pages.push(i);
+
+		if (current < total - 2) pages.push('...');
+
+		pages.push(total);
+		return pages;
+	}
 </script>
 
 <svelte:head>
@@ -143,19 +166,36 @@
 		{#if data.totalPages > 1}
 			<div class="flex items-center justify-between">
 				<p class="text-xs text-neutral-500">Page {data.page} of {data.totalPages}</p>
-				<div class="flex gap-2">
-					{#if data.page > 1}
-						<a
-							href="?{new URLSearchParams({ ...Object.fromEntries(page.url.searchParams), page: String(data.page - 1) }).toString()}"
-							class="rounded-sm border border-neutral-700 bg-neutral-800 px-3 py-1.5 text-xs text-neutral-200 transition-colors hover:bg-neutral-700"
-						>Previous</a>
-					{/if}
-					{#if data.page < data.totalPages}
-						<a
-							href="?{new URLSearchParams({ ...Object.fromEntries(page.url.searchParams), page: String(data.page + 1) }).toString()}"
-							class="rounded-sm border border-neutral-700 bg-neutral-800 px-3 py-1.5 text-xs text-neutral-200 transition-colors hover:bg-neutral-700"
-						>Next</a>
-					{/if}
+				<div class="flex items-center gap-1">
+					<a
+						href={data.page > 1 ? pageUrl(data.page - 1) : undefined}
+						class="rounded-sm border border-neutral-700 px-2.5 py-1.5 text-xs transition-colors
+							{data.page > 1 ? 'bg-neutral-800 text-neutral-200 hover:bg-neutral-700 cursor-pointer' : 'bg-neutral-800/50 text-neutral-600 pointer-events-none'}"
+						aria-label="Previous page"
+					>
+						<svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+					</a>
+
+					{#each getPageNumbers(data.page, data.totalPages) as p}
+						{#if p === '...'}
+							<span class="px-1.5 text-xs text-neutral-600">...</span>
+						{:else}
+							<a
+								href={pageUrl(p)}
+								class="rounded-sm px-2.5 py-1.5 text-xs font-medium transition-colors
+									{p === data.page ? 'bg-gold text-neutral-950' : 'border border-neutral-700 bg-neutral-800 text-neutral-200 hover:bg-neutral-700'}"
+							>{p}</a>
+						{/if}
+					{/each}
+
+					<a
+						href={data.page < data.totalPages ? pageUrl(data.page + 1) : undefined}
+						class="rounded-sm border border-neutral-700 px-2.5 py-1.5 text-xs transition-colors
+							{data.page < data.totalPages ? 'bg-neutral-800 text-neutral-200 hover:bg-neutral-700 cursor-pointer' : 'bg-neutral-800/50 text-neutral-600 pointer-events-none'}"
+						aria-label="Next page"
+					>
+						<svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+					</a>
 				</div>
 			</div>
 		{/if}
