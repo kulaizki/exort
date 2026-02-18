@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&family=Ubuntu+Mono:wght@700&display=swap');
 @import 'tailwindcss';
 
 /* Manrope — self-hosted */
@@ -28,7 +29,8 @@
 
 /* Theme */
 @theme {
-	--font-sans: 'Manrope', system-ui, sans-serif;
+	--font-sans: 'Ubuntu', system-ui, sans-serif;
+	--font-logo: 'Ubuntu Mono', monospace;
 
 	--color-neutral-950: #0A0A0A;
 	--color-neutral-900: #141414;

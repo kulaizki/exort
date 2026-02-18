@@ -30,7 +30,8 @@
 		<div class="grid grid-cols-1 gap-8 sm:grid-cols-2 md:grid-cols-4">
 			<!-- Brand column -->
 			<div class="sm:col-span-2">
-				<a href="/" class="mb-4 inline-block text-lg font-bold tracking-tight text-white">
+				<a href="/" class="mb-4 inline-flex items-center gap-2 font-logo text-lg font-bold tracking-tight text-white">
+					<img src="/exort-logo.svg" alt="" class="h-7 w-auto" />
 					exort
 				</a>
 				<p class="mb-4 max-w-xs text-sm text-neutral-400">

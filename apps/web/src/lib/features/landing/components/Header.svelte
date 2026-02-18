@@ -27,8 +27,9 @@
 			<a
 				href="/"
 				onclick={scrollTop}
-				class="text-lg font-bold tracking-tight text-white"
+				class="flex items-center gap-2 font-logo text-lg font-bold tracking-tight text-white"
 			>
+				<img src="/exort-logo.svg" alt="" class="h-7 w-auto" />
 				exort
 			</a>
 
