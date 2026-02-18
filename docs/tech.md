@@ -175,11 +175,41 @@ exort/
 ├── docs/
 │   ├── overview.md
 │   ├── tech.md
-│   └── todo.md
+│   ├── todo.md
+│   └── branding.md
 ├── package.json
 ├── pnpm-workspace.yaml
 └── .gitignore
 ```
+
+## Frontend Structure (apps/web)
+
+Feature-based modularization — each feature is self-contained with components, types, and utils.
+
+```
+src/lib/
+├── features/              # feature modules (self-contained)
+│   ├── landing/           # landing page
+│   │   ├── components/    # Header, Hero, Features, HowItWorks, CTA, Footer
+│   │   │   └── index.ts   # component barrel export
+│   │   └── index.ts       # feature barrel export
+│   ├── auth/              # login, register, session (future)
+│   ├── dashboard/         # overview, stats, charts (future)
+│   ├── games/             # game list, game detail (future)
+│   └── chat/              # RAG chat UI (future)
+├── components/            # shared components (used across features)
+│   └── index.ts
+├── actions/               # Svelte actions (inview, etc.)
+├── stores/                # Svelte 5 state (.svelte.ts) (future)
+├── utils/                 # shared utility functions (future)
+└── server/                # server-only (auth, prisma)
+```
+
+Patterns:
+- Two-level barrel exports: `features/[name]/components/index.ts` → `features/[name]/index.ts`
+- Routes import from feature: `import { Header, Hero } from '$lib/features/landing'`
+- Shared components in `lib/components/`, feature-specific in `lib/features/`
+- Server-only code isolated in `lib/server/`
 
 ---
 
