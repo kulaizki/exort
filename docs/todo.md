@@ -53,7 +53,9 @@
 - [x] Custom logo (gold flame SVG, cropped viewBox)
 - [x] Fonts: Ubuntu (body), Ubuntu Mono (logo wordmark)
 - [x] Shared `ChessboardBg` component (`$lib/components/`)
-- [x] `<svelte:head>` titles on all pages
+- [x] `<svelte:head>` titles + OG/Twitter meta on all pages
+- [x] Favicon updated to exort logo SVG
+- [x] Lowercase minimal titles and descriptions
 
 ## Phase 3: Auth + Lichess Connect (Web)
 
