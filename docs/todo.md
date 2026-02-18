@@ -78,7 +78,7 @@
   - [x] ~~Register Lichess OAuth app~~ (not needed — Lichess uses PKCE public clients)
   - [x] Add Lichess as custom OAuth provider in Better Auth (genericOAuth plugin)
   - [x] Auto-link Lichess username on OAuth login (no manual entry needed)
-  - [ ] Store in `lichess_accounts` table (needs post-OAuth hook)
+  - [x] Store in `lichess_accounts` table (databaseHooks.account.create.after)
 - [x] Session management (hooks.server.ts guard)
 - [x] Dashboard layout (sidebar, auth guard)
 - [x] Profile page (user info, connected Lichess account)

@@ -11,6 +11,20 @@ export const auth = betterAuth({
 	secret: env.BETTER_AUTH_SECRET,
 	database: prismaAdapter(prisma, { provider: 'postgresql' }),
 	emailAndPassword: { enabled: true },
+	databaseHooks: {
+		account: {
+			create: {
+				after: async (account) => {
+					if (account.providerId !== 'lichess') return;
+					await prisma.lichessAccount.upsert({
+						where: { userId: account.userId },
+						update: { lichessUsername: account.accountId },
+						create: { userId: account.userId, lichessUsername: account.accountId }
+					});
+				}
+			}
+		}
+	},
 	plugins: [
 		genericOAuth({
 			config: [
@@ -34,7 +48,7 @@ export const auth = betterAuth({
 						const account = await accountRes.json();
 						const emailData = emailRes.ok ? await emailRes.json() : null;
 						return {
-							id: account.id,
+							id: account.username,
 							name: account.username,
 							email: emailData?.email ?? undefined,
 							emailVerified: !!emailData?.email
