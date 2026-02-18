@@ -1,7 +1,8 @@
 FROM node:20-slim AS base
 RUN corepack enable
 
-FROM base AS build
+# Stage 1: Build
+FROM base AS builder
 WORKDIR /app
 COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
 COPY packages/db/ packages/db/
@@ -9,13 +10,19 @@ COPY apps/web/package.json apps/web/
 RUN pnpm install --frozen-lockfile
 COPY apps/web/ apps/web/
 RUN pnpm -F @exort/web build
-RUN pnpm deploy --filter @exort/web --prod --legacy /app/deploy
 
-FROM base AS runtime
+# Stage 2: Production dependencies
+FROM base AS deps
 WORKDIR /app
-COPY --from=build /app/deploy/node_modules ./node_modules
-COPY --from=build /app/apps/web/build ./build
-COPY --from=build /app/deploy/package.json ./
+COPY --from=builder /app/apps/web/package.json ./
+RUN npm install --omit=dev --ignore-scripts
+
+# Stage 3: Runtime
+FROM node:20-slim AS runtime
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
+COPY --from=builder /app/apps/web/build ./build
+COPY --from=builder /app/apps/web/package.json ./
 ENV NODE_ENV=production
 ENV PORT=3000
 EXPOSE 3000
