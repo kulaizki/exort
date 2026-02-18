@@ -37,15 +37,27 @@
 - [ ] Add indexes (games.user_id, games.lichess_game_id, analysis_jobs.status, game_metrics.game_id)
 - [ ] Seed script for dev data (optional)
 
+## Phase 2.5: Landing Page
+
+- [ ] Public landing page (`/` route)
+  - [ ] Header (logo, nav, sign in / sign up CTAs)
+  - [ ] Hero section (tagline, CTA, visual)
+  - [ ] Features section (sync, analysis, coaching)
+  - [ ] How it works (step-by-step flow)
+  - [ ] Final CTA (sign up)
+  - [ ] Footer (links, copyright)
+- [ ] Follow branding guide (dark + yellow, Manrope, xs radius)
+
 ## Phase 3: Auth + Lichess Connect (Web)
 
-- [ ] Better Auth login / register pages
+- [ ] Better Auth login / register pages (email/password)
+- [ ] Lichess OAuth2 login ("Sign in with Lichess"):
+  - [ ] Register Lichess OAuth app (`https://lichess.org/account/oauth/app`)
+  - [ ] Add Lichess as custom OAuth provider in Better Auth
+  - [ ] Auto-link Lichess username on OAuth login (no manual entry needed)
+  - [ ] Store in `lichess_accounts` table
 - [ ] Session management (hooks.server.ts guard)
 - [ ] Dashboard layout (sidebar, auth guard)
-- [ ] Lichess username connect page:
-  - [ ] Form to enter Lichess username
-  - [ ] Validate username exists via Lichess API (`https://lichess.org/api/user/{username}`)
-  - [ ] Store in `lichess_accounts` table
 - [ ] Profile page (user info, connected Lichess account)
 
 ## Phase 4: API Service (Express)
@@ -209,7 +221,7 @@
 - Multi-tenant scaling
 - Heavy frontend polish
 - Real-time move analysis (only post-game)
-- OAuth with Lichess (username-only connect for v1)
+- OAuth with Lichess for game data scopes (read-only public games sufficient for v1)
 
 ## Decisions Made
 
