@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import { ChessboardBg } from '$lib/components';
+	import { authClient } from '$lib/auth-client';
 
 	type Props = {
 		form: { message?: string } | null;
@@ -45,7 +46,7 @@
 			<span class="font-logo text-lg font-bold text-neutral-200">exort</span>
 		</div>
 
-		<div class="rounded-sm border border-neutral-800 bg-neutral-900 p-6">
+		<div class="rounded-sm border border-neutral-800 bg-neutral-900/80 p-6 backdrop-blur-md">
 			<h1 class="mb-6 text-center text-xl font-semibold text-neutral-200">
 				Sign in to your account
 			</h1>
@@ -56,15 +57,15 @@
 				</div>
 			{/if}
 
-			<a
-				href="/auth/lichess"
-				class="flex w-full items-center justify-center gap-2.5 rounded-sm border border-neutral-700 bg-neutral-800 px-4 py-2.5 text-sm font-medium text-neutral-200 transition-colors hover:bg-neutral-700"
+			<button
+				onclick={() => authClient.signIn.oauth2({ providerId: 'lichess', callbackURL: '/dashboard' })}
+				class="flex w-full cursor-pointer items-center justify-center gap-2.5 rounded-sm border border-neutral-700 bg-neutral-800 px-4 py-2.5 text-sm font-medium text-neutral-200 transition-colors hover:bg-neutral-700"
 			>
 				<svg class="size-5" viewBox="0 0 50 50" fill="currentColor">
 					<path stroke="currentColor" stroke-linejoin="round" d="M38.956.5c-3.53.418-6.452.902-9.286 2.984C5.534 1.786-.692 18.533.68 29.364 3.493 50.214 31.918 55.785 41.329 41.7c-7.444 7.696-19.276 8.752-28.323 3.084C3.959 39.116-.506 27.392 4.683 17.567 9.873 7.742 18.996 4.535 29.03 6.405c2.43-1.418 5.225-3.22 7.655-3.187l-1.694 4.86 12.752 21.37c-.439 5.654-5.459 6.112-5.459 6.112-.574-1.47-1.634-2.942-4.842-6.036-3.207-3.094-17.465-10.177-15.788-16.207-2.001 6.967 10.311 14.152 14.04 17.663 3.73 3.51 5.426 6.04 5.795 6.756 0 0 9.392-2.504 7.838-8.927L37.4 7.171z"/>
 				</svg>
 				Sign in with Lichess
-			</a>
+			</button>
 
 			<div class="relative my-5">
 				<div class="absolute inset-0 flex items-center">

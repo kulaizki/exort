@@ -21,30 +21,30 @@
 - [x] Branding guide + gold theme + Ubuntu/Ubuntu Mono fonts
 - [x] `CLAUDE.md` project conventions
 
-## Phase 2: Local Dev + Database Schema
+## Phase 2: Local Dev + Database Schema ✅
 
-- [ ] Docker Compose for local dev (PostgreSQL 16 + pgAdmin optional)
-- [ ] Create `packages/db` shared package (`@exort/db`):
-  - [ ] Single Prisma schema (owns all models + migrations)
-  - [ ] Generated client exported for `web` and `api` to consume
-  - [ ] Move Better Auth models from `apps/web/prisma/` into shared schema
-- [ ] Design PostgreSQL schema:
-  - [ ] `users` (Better Auth managed)
-  - [ ] `lichess_accounts` (user_id, lichess_username, last_synced_at)
-  - [ ] `games` (lichess_game_id PK, user_id, pgn, time_control, result, played_at, opponent, color, rated, variant, clock_initial, clock_increment, player_rating, opponent_rating, status)
-  - [ ] `analysis_jobs` (id, game_id, status enum [pending/processing/completed/failed], created_at, started_at, completed_at)
-  - [ ] `game_metrics` (game_id FK, centipawn_loss, accuracy, blunder_count, mistake_count, inaccuracy_count, opening_name, opening_eco, phase_errors JSONB)
-  - [ ] `move_evaluations` (id, game_id FK, move_number, color, eval_cp, best_move_uci, played_move_uci, classification enum [blunder/mistake/inaccuracy/good/excellent/brilliant])
-  - [ ] `chat_sessions` (id, user_id, title, game_id FK nullable, created_at)
-  - [ ] `chat_messages` (id, session_id FK, role enum [user/assistant], content, context JSONB, created_at)
-- [ ] Run `prisma db push` against local Postgres
-- [ ] Add indexes:
-  - [ ] `games`: user_id, lichess_game_id (unique), played_at, time_control
-  - [ ] `analysis_jobs`: status, game_id
-  - [ ] `game_metrics`: game_id
-  - [ ] `move_evaluations`: game_id, (game_id + move_number) composite
-  - [ ] `chat_sessions`: user_id
-  - [ ] `chat_messages`: session_id
+- [x] Docker Compose for local dev (PostgreSQL 16 + pgAdmin optional)
+- [x] Create `packages/db` shared package (`@exort/db`):
+  - [x] Single Prisma schema (owns all models + migrations)
+  - [x] Generated client exported for `web` and `api` to consume
+  - [x] Move Better Auth models from `apps/web/prisma/` into shared schema
+- [x] Design PostgreSQL schema:
+  - [x] `users` (Better Auth managed)
+  - [x] `lichess_accounts` (user_id, lichess_username, last_synced_at)
+  - [x] `games` (lichess_game_id PK, user_id, pgn, time_control, result, played_at, opponent, color, rated, variant, clock_initial, clock_increment, player_rating, opponent_rating, status)
+  - [x] `analysis_jobs` (id, game_id, status enum [pending/processing/completed/failed], created_at, started_at, completed_at)
+  - [x] `game_metrics` (game_id FK, centipawn_loss, accuracy, blunder_count, mistake_count, inaccuracy_count, opening_name, opening_eco, phase_errors JSONB)
+  - [x] `move_evaluations` (id, game_id FK, move_number, color, eval_cp, best_move_uci, played_move_uci, classification enum [blunder/mistake/inaccuracy/good/excellent/brilliant])
+  - [x] `chat_sessions` (id, user_id, title, game_id FK nullable, created_at)
+  - [x] `chat_messages` (id, session_id FK, role enum [user/assistant], content, context JSONB, created_at)
+- [x] Run `prisma db push` against local Postgres
+- [x] Add indexes:
+  - [x] `games`: user_id, lichess_game_id (unique), played_at, time_control
+  - [x] `analysis_jobs`: status, game_id
+  - [x] `game_metrics`: game_id
+  - [x] `move_evaluations`: game_id, (game_id + move_number) composite
+  - [x] `chat_sessions`: user_id
+  - [x] `chat_messages`: session_id
 - [ ] Seed script for dev data (optional)
 
 ## Phase 2.5: Landing Page ✅
@@ -74,60 +74,60 @@
   - [x] Back buttons linking to landing page
   - [x] "Sign in/up with Lichess" button UI (official Lichess knight logo)
   - [x] Login field accepts "Username or email"
-- [ ] Lichess OAuth2 login ("Sign in with Lichess"):
-  - [ ] Register Lichess OAuth app (`https://lichess.org/account/oauth/app`)
-  - [ ] Add Lichess as custom OAuth provider in Better Auth
-  - [ ] Auto-link Lichess username on OAuth login (no manual entry needed)
-  - [ ] Store in `lichess_accounts` table
+- [x] Lichess OAuth2 login ("Sign in with Lichess"):
+  - [x] ~~Register Lichess OAuth app~~ (not needed — Lichess uses PKCE public clients)
+  - [x] Add Lichess as custom OAuth provider in Better Auth (genericOAuth plugin)
+  - [x] Auto-link Lichess username on OAuth login (no manual entry needed)
+  - [ ] Store in `lichess_accounts` table (needs post-OAuth hook)
 - [ ] Session management (hooks.server.ts guard)
 - [ ] Dashboard layout (sidebar, auth guard)
 - [ ] Profile page (user info, connected Lichess account)
 
-## Phase 4: API Service (Express)
+## Phase 4: API Service (Express) ✅
 
-- [ ] Scaffold `apps/api/` (Express + TypeScript)
-  - [ ] `package.json` as `@exort/api`
-  - [ ] `src/index.ts` entry point (Express app, middleware registration, route mounting)
-  - [ ] `src/config/index.ts` — env config with Zod validation
-  - [ ] Express app with `/health` route
-  - [ ] Import Prisma client from `@exort/db`
-- [ ] Feature-based structure (`src/features/`):
-  - [ ] Each feature: `router.ts` (HTTP) → `service.ts` (logic) → Prisma (data)
-  - [ ] `schema.ts` per feature — Zod request/response validation
-  - [ ] Barrel exports: `features/[name]/index.ts` → `features/index.ts`
-  - [ ] Features: games, metrics, sync, analysis, coach, profile, lichess
-- [ ] Middleware (`src/middleware/`):
-  - [ ] `auth.ts` — session validation (Better Auth token check against session table)
-  - [ ] `cors.ts` — CORS config (allow web origin)
-  - [ ] `error.ts` — global error handler (Zod errors → 400, unknown → 500)
-- [ ] Auth strategy (web → api):
-  - [ ] SvelteKit server-side load functions call API with forwarded session token
-  - [ ] Express middleware validates token against Better Auth session table
-- [ ] Routes:
-  - [ ] **Games:**
-    - [ ] `GET /games` — list user's games (paginated, filterable by time_control, result, date range, opening)
-    - [ ] `GET /games/:id` — game detail + metrics + move evaluations
-  - [ ] **Metrics:**
-    - [ ] `GET /metrics/summary` — aggregate stats (avg accuracy, blunder/mistake/inaccuracy rates, opening breakdown)
-    - [ ] `GET /metrics/trends` — time-series metrics (weekly/monthly accuracy, blunder rate)
-  - [ ] **Sync:**
-    - [ ] `POST /sync/trigger` — trigger Lichess sync for user
-  - [ ] **Analysis:**
-    - [ ] `POST /analysis/enqueue` — enqueue analysis job for a game
-    - [ ] `GET /analysis/status/:jobId` — poll job status
-  - [ ] **Coach (Chat):**
-    - [ ] `POST /chat/sessions` — create new chat session (optional game_id for game-specific coaching)
-    - [ ] `GET /chat/sessions` — list user's chat sessions
-    - [ ] `DELETE /chat/sessions/:id` — delete a chat session
-    - [ ] `GET /chat/sessions/:id/messages` — load messages for a session
-    - [ ] `POST /chat/sessions/:id/messages` — send message, get AI response (streaming)
-  - [ ] **Settings:**
-    - [ ] `GET /profile` — user info + connected Lichess account
-    - [ ] `PATCH /profile` — update name/email
-    - [ ] `POST /lichess/connect` — initiate Lichess OAuth link
-    - [ ] `DELETE /lichess/disconnect` — unlink Lichess account
-- [ ] Dockerfile for Cloud Run
-- [ ] Add `dev:api` script to root `package.json` + concurrently
+- [x] Scaffold `apps/api/` (Express + TypeScript)
+  - [x] `package.json` as `@exort/api`
+  - [x] `src/index.ts` entry point (Express app, middleware registration, route mounting)
+  - [x] `src/config/index.ts` — env config with Zod validation
+  - [x] Express app with `/health` route
+  - [x] Import Prisma client from `@exort/db`
+- [x] Feature-based structure (`src/features/`):
+  - [x] Each feature: `router.ts` (HTTP) → `service.ts` (logic) → Prisma (data)
+  - [x] `schema.ts` per feature — Zod request/response validation
+  - [x] Barrel exports: `features/[name]/index.ts` → `features/index.ts`
+  - [x] Features: games, metrics, sync, analysis, coach, profile, lichess
+- [x] Middleware (`src/middleware/`):
+  - [x] `auth.ts` — session validation (Better Auth token check against session table)
+  - [x] `cors.ts` — CORS config (allow web origin)
+  - [x] `error.ts` — global error handler (Zod errors → 400, unknown → 500)
+- [x] Auth strategy (web → api):
+  - [x] SvelteKit server-side load functions call API with forwarded session token
+  - [x] Express middleware validates token against Better Auth session table
+- [x] Routes:
+  - [x] **Games:**
+    - [x] `GET /games` — list user's games (paginated, filterable by time_control, result, date range, opening)
+    - [x] `GET /games/:id` — game detail + metrics + move evaluations
+  - [x] **Metrics:**
+    - [x] `GET /metrics/summary` — aggregate stats (avg accuracy, blunder/mistake/inaccuracy rates, opening breakdown)
+    - [x] `GET /metrics/trends` — time-series metrics (weekly/monthly accuracy, blunder rate)
+  - [x] **Sync:**
+    - [x] `POST /sync/trigger` — trigger Lichess sync for user
+  - [x] **Analysis:**
+    - [x] `POST /analysis/enqueue` — enqueue analysis job for a game
+    - [x] `GET /analysis/status/:jobId` — poll job status
+  - [x] **Coach (Chat):**
+    - [x] `POST /chat/sessions` — create new chat session (optional game_id for game-specific coaching)
+    - [x] `GET /chat/sessions` — list user's chat sessions
+    - [x] `DELETE /chat/sessions/:id` — delete a chat session
+    - [x] `GET /chat/sessions/:id/messages` — load messages for a session
+    - [x] `POST /chat/sessions/:id/messages` — send message, get AI response (streaming)
+  - [x] **Settings:**
+    - [x] `GET /profile` — user info + connected Lichess account
+    - [x] `PATCH /profile` — update name/email
+    - [x] `POST /lichess/connect` — initiate Lichess OAuth link
+    - [x] `DELETE /lichess/disconnect` — unlink Lichess account
+- [x] Dockerfile for Cloud Run
+- [x] Add `dev:api` script to root `package.json` + concurrently
 
 ## Phase 5: Lichess Sync Service
 
