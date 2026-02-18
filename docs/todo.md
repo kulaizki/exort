@@ -199,10 +199,17 @@
 - [ ] Deploy `sync` to Cloud Run:
   - [ ] Dockerfile
   - [ ] Cloud Scheduler trigger (optional)
+- [ ] Pub/Sub for job dispatch:
+  - [ ] Topic: `analysis-jobs` (sync publishes, worker subscribes)
+  - [ ] Push subscription to worker or pull from VPS
 - [ ] Deploy on Coolify VPS:
   - [ ] PostgreSQL 16 (strong password, restricted access, backup strategy)
   - [ ] `worker` — Docker with Stockfish binary, CPU quotas
   - [ ] Coolify reverse proxy + SSL
+  - [ ] Cloud Run services connect to VPS Postgres over public IP (no Cloud SQL needed)
+- [ ] Terraform IaC:
+  - [ ] Cloud Run services, Pub/Sub topics, Artifact Registry
+  - [ ] Environment variables and IAM roles
 - [ ] CI/CD (GitHub Actions):
   - [ ] Build + deploy Cloud Run services on push to main
   - [ ] Per-service triggers (only redeploy changed services)
@@ -244,10 +251,11 @@
 - [x] **Prisma 7 everywhere** — schema-first, auto-generated client, managed migrations, single ORM
 - [x] **Better Auth** — session-based auth, TypeScript-native, Prisma adapter
 - [x] **Stockfish 18** — latest (Jan 2026), +46 Elo over v17
-- [x] **Postgres-backed job queue** — no extra infra, ACID transactional enqueue
+- [x] **Pub/Sub job dispatch** — Cloud Run sync → Pub/Sub → VPS worker (event-driven, showcases GCP)
 - [x] **Structured SQL RAG** — chess metrics are structured, not prose
 - [x] **Gemini 2.5 Flash** — long context, low latency, cost-effective
-- [x] **Hybrid deploy** — Cloud Run (stateless) + Coolify VPS (compute + data)
+- [x] **Hybrid deploy** — Cloud Run (stateless) + Coolify VPS (Postgres + Stockfish worker)
+- [x] **Terraform** — IaC for all GCP resources
 
 - [x] **Shared `packages/db`** — single Prisma schema consumed by both `web` and `api`
 - [x] **Coolify** — self-hosted PaaS for VPS (Postgres, worker), reverse proxy + SSL
