@@ -66,7 +66,7 @@
 								<span class="truncate text-sm text-neutral-200">vs {game.opponent}</span>
 							</div>
 							<p class="mt-0.5 text-xs text-neutral-500">
-								{game.timeControl} &middot; {game.metrics?.openingName ?? 'Unknown opening'}
+								{game.timeControl} &middot; {game.openingName ?? 'Unknown opening'}
 							</p>
 						</div>
 						<div class="ml-4 text-right">

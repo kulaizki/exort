@@ -43,6 +43,8 @@ export function mapLichessGame(lichessGame: LichessGame, userId: string, usernam
     clockIncrement: lichessGame.clock?.increment ?? null,
     playerRating: playerRating ?? null,
     opponentRating: opponentRating ?? null,
-    status: lichessGame.status
+    status: lichessGame.status,
+    openingName: lichessGame.opening?.name ?? null,
+    openingEco: lichessGame.opening?.eco ?? null
   };
 }

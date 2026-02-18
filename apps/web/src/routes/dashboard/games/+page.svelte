@@ -119,7 +119,6 @@
 		>
 			<option value="date">Sort by date</option>
 			<option value="accuracy">Sort by accuracy</option>
-			<option value="blunders">Sort by blunders</option>
 		</select>
 	</div>
 
@@ -151,7 +150,7 @@
 							</td>
 							<td class="px-4 py-2.5 text-neutral-200">{game.opponent}</td>
 							<td class="hidden px-4 py-2.5 text-neutral-400 capitalize sm:table-cell">{game.timeControl}</td>
-							<td class="hidden px-4 py-2.5 text-neutral-400 md:table-cell">{game.metrics?.openingName ?? '--'}</td>
+							<td class="hidden px-4 py-2.5 text-neutral-400 md:table-cell">{game.openingName ?? '--'}</td>
 							<td class="px-4 py-2.5 text-right font-medium {game.metrics?.accuracy != null ? 'text-neutral-200' : 'text-neutral-600'}">
 								{game.metrics?.accuracy != null ? `${game.metrics.accuracy.toFixed(1)}%` : '--'}
 							</td>
