@@ -260,20 +260,20 @@ All services on Coolify VPS. Only Vertex AI on GCP.
 - [x] Deploy `exort-worker` on Coolify VPS:
   - [x] GitHub repo, Dockerfile build pack, base dir `/apps/worker`
   - [x] Environment variables (DATABASE_URL internal, ANALYSIS_DEPTH, POLL_INTERVAL, MAX_CONCURRENT)
-- [ ] Deploy `exort-web` on Coolify VPS:
-  - [ ] GitHub repo, Dockerfile build pack, base dir `/apps/web`
-  - [ ] Environment variables (DATABASE_URL, BETTER_AUTH_SECRET, BETTER_AUTH_URL, ORIGIN)
-  - [ ] Domain: `exort.fitzsixto.com`
-- [ ] Deploy `exort-api` on Coolify VPS:
-  - [ ] GitHub repo, Dockerfile build pack, base dir `/apps/api`
-  - [ ] Environment variables (DATABASE_URL, VERTEX_AI config, CORS_ORIGIN)
-  - [ ] Domain: `api.exort.fitzsixto.com`
-- [ ] Deploy `exort-sync` on Coolify VPS:
-  - [ ] GitHub repo, Dockerfile build pack, base dir `/apps/sync`
-  - [ ] Environment variables (DATABASE_URL)
-  - [ ] No domain needed (triggered by API internally)
-- [ ] Coolify reverse proxy + SSL (wildcard `*.fitzsixto.com`)
-- [ ] CI/CD: Coolify GitHub webhook auto-deploy on push to main
+- [x] Deploy `exort-web` on Coolify VPS:
+  - [x] GitHub repo, Dockerfile build pack, base dir `/apps/web`
+  - [x] Environment variables (DATABASE_URL, BETTER_AUTH_SECRET, BETTER_AUTH_URL, ORIGIN)
+  - [x] Domain: `exort.fitzsixto.com`
+- [x] Deploy `exort-api` on Coolify VPS:
+  - [x] GitHub repo, Dockerfile build pack, base dir `/apps/api`
+  - [x] Environment variables (DATABASE_URL, VERTEX_AI config, CORS_ORIGIN)
+  - [x] Domain: `api.exort.fitzsixto.com`
+- [x] Deploy `exort-sync` on Coolify VPS:
+  - [x] GitHub repo, Dockerfile build pack, base dir `/apps/sync`
+  - [x] Environment variables (DATABASE_URL)
+  - [x] No domain needed (triggered by API internally)
+- [x] Coolify reverse proxy + SSL (wildcard `*.fitzsixto.com`)
+- [x] CI/CD: Coolify GitHub webhook auto-deploy on push to main
 - [ ] End-to-end smoke test on production
 
 ## Phase 10: Testing
@@ -309,6 +309,23 @@ Tests colocated with features: `features/[name]/__tests__/[name].test.ts`
 - [ ] Security headers (CSP, HSTS, X-Frame-Options)
 - [ ] Monitoring / logging (Cloud Run built-in + structured logs)
 - [ ] README.md with setup instructions
+
+---
+
+## Docker Deployment Fixes (Resolved)
+
+All three services (web, api, sync) use a 3-stage Dockerfile pattern: **builder** (pnpm install + build) → **deps** (npm install --omit=dev for flat prod node_modules) → **runtime** (minimal image with build output + prod deps).
+
+Key issues resolved during Coolify deployment:
+
+- **`$env/static/private` requires env at build time** — switched `prisma.ts` to `$env/dynamic/private` so `DATABASE_URL` is read at runtime, not inlined during `vite build`
+- **BetterAuthError during build** — guarded `betterAuth()` init with `building` flag from `$app/environment` to skip during SSR build
+- **npm can't resolve `workspace:*` protocol** — added node one-liner in deps stage to strip workspace deps from `package.json` before `npm install`
+- **`dotenv` missing at runtime** — moved from devDependencies to dependencies in `apps/api/package.json`
+- **`TS2742` type inference error in sync** — added explicit `Express` type annotation in `apps/sync/src/index.ts`
+- **`@exort/db` not loadable at runtime** — `packages/db` has `"main": "src/index.ts"` (TypeScript), Node.js 20 can't load `.ts`. Fixed by bundling `@exort/db` with esbuild into a single JS file during Docker build, copied to `node_modules/@exort/db` in runtime stage. `@prisma/*` externalized
+- **`esbuild: not found` in Docker** — pnpm strict hoisting doesn't expose transitive binaries. Added esbuild to root `package.json` devDependencies
+- **`@prisma/client` missing at runtime** — esbuild bundle externalizes `@prisma/*`, but `@prisma/client` wasn't a direct dep of `apps/api`. Added as direct dependency so `npm install --omit=dev` installs it
 
 ---
 
