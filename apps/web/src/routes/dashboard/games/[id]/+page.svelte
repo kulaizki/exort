@@ -1,0 +1,170 @@
+<script lang="ts">
+	let { data } = $props();
+	const game = $derived(data.game);
+	const metrics = $derived(game.metrics);
+	const phases = $derived(metrics?.phaseErrors as Record<string, Record<string, number>> | null);
+
+	function formatDate(dateStr: string) {
+		return new Date(dateStr).toLocaleDateString('en-US', {
+			weekday: 'short', month: 'short', day: 'numeric', year: 'numeric'
+		});
+	}
+</script>
+
+<svelte:head>
+	<title>vs {game.opponent} — exort</title>
+</svelte:head>
+
+<div class="space-y-6">
+	<!-- Back link -->
+	<a href="/dashboard/games" class="inline-flex items-center gap-1.5 text-sm text-neutral-400 transition-colors hover:text-neutral-200">
+		<svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>
+		Back to games
+	</a>
+
+	<!-- Header -->
+	<div class="rounded-sm border border-neutral-800 bg-neutral-900 p-5">
+		<div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+			<div>
+				<div class="flex items-center gap-3">
+					<span class="inline-flex h-8 w-8 items-center justify-center rounded-sm text-sm font-bold
+						{game.result === 'win' ? 'bg-green-500/20 text-green-400' : game.result === 'loss' ? 'bg-red-500/20 text-red-400' : 'bg-neutral-700 text-neutral-400'}">
+						{game.result === 'win' ? 'W' : game.result === 'loss' ? 'L' : 'D'}
+					</span>
+					<div>
+						<h1 class="text-lg font-semibold text-neutral-200">vs {game.opponent}</h1>
+						<p class="text-sm text-neutral-500">
+							{game.color === 'white' ? 'Playing White' : 'Playing Black'}
+							{#if game.playerRating}&middot; {game.playerRating}{/if}
+							vs
+							{#if game.opponentRating}{game.opponentRating}{/if}
+						</p>
+					</div>
+				</div>
+			</div>
+			<div class="flex flex-wrap gap-2 text-xs text-neutral-500">
+				<span class="rounded-sm bg-neutral-800 px-2 py-1 capitalize">{game.timeControl}</span>
+				<span class="rounded-sm bg-neutral-800 px-2 py-1">{formatDate(game.playedAt)}</span>
+				{#if game.rated}
+					<span class="rounded-sm bg-neutral-800 px-2 py-1">Rated</span>
+				{/if}
+			</div>
+		</div>
+	</div>
+
+	{#if metrics}
+		<!-- Metrics panel -->
+		<div class="grid grid-cols-2 gap-3 sm:grid-cols-5">
+			<div class="rounded-sm border border-neutral-800 bg-neutral-900 p-4 text-center">
+				<p class="text-2xl font-bold text-gold">{metrics.accuracy.toFixed(1)}%</p>
+				<p class="mt-1 text-xs text-neutral-500">Accuracy</p>
+			</div>
+			<div class="rounded-sm border border-neutral-800 bg-neutral-900 p-4 text-center">
+				<p class="text-2xl font-bold text-neutral-200">{metrics.centipawnLoss.toFixed(0)}</p>
+				<p class="mt-1 text-xs text-neutral-500">Avg CPL</p>
+			</div>
+			<div class="rounded-sm border border-neutral-800 bg-neutral-900 p-4 text-center">
+				<p class="text-2xl font-bold text-red-400">{metrics.blunderCount}</p>
+				<p class="mt-1 text-xs text-neutral-500">Blunders</p>
+			</div>
+			<div class="rounded-sm border border-neutral-800 bg-neutral-900 p-4 text-center">
+				<p class="text-2xl font-bold text-orange-400">{metrics.mistakeCount}</p>
+				<p class="mt-1 text-xs text-neutral-500">Mistakes</p>
+			</div>
+			<div class="rounded-sm border border-neutral-800 bg-neutral-900 p-4 text-center">
+				<p class="text-2xl font-bold text-yellow-400">{metrics.inaccuracyCount}</p>
+				<p class="mt-1 text-xs text-neutral-500">Inaccuracies</p>
+			</div>
+		</div>
+
+		<!-- Opening -->
+		{#if metrics.openingName}
+			<div class="rounded-sm border border-neutral-800 bg-neutral-900 p-4">
+				<p class="text-xs font-medium text-neutral-500">Opening</p>
+				<p class="mt-1 text-sm text-neutral-200">
+					{#if metrics.openingEco}<span class="mr-1.5 text-gold">{metrics.openingEco}</span>{/if}
+					{metrics.openingName}
+				</p>
+			</div>
+		{/if}
+
+		<!-- Phase breakdown -->
+		{#if phases}
+			<div>
+				<h2 class="mb-3 text-sm font-medium text-neutral-300">Phase Breakdown</h2>
+				<div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+					{#each ['opening', 'middlegame', 'endgame'] as phase}
+						{@const p = phases[phase]}
+						{#if p}
+							<div class="rounded-sm border border-neutral-800 bg-neutral-900 p-4">
+								<p class="mb-2 text-xs font-medium capitalize text-neutral-400">{phase}</p>
+								<div class="flex gap-4 text-xs">
+									<span class="text-red-400">{p.blunders ?? 0} blunders</span>
+									<span class="text-orange-400">{p.mistakes ?? 0} mistakes</span>
+									<span class="text-yellow-400">{p.inaccuracies ?? 0} inaccuracies</span>
+								</div>
+							</div>
+						{/if}
+					{/each}
+				</div>
+			</div>
+		{/if}
+
+		<!-- Move evaluations -->
+		{#if game.moveEvaluations?.length > 0}
+			<div>
+				<h2 class="mb-3 text-sm font-medium text-neutral-300">Move Evaluations</h2>
+				<div class="max-h-80 overflow-y-auto rounded-sm border border-neutral-800">
+					<table class="w-full text-xs">
+						<thead class="sticky top-0 bg-neutral-900">
+							<tr class="border-b border-neutral-800">
+								<th class="px-3 py-2 text-left text-neutral-500">#</th>
+								<th class="px-3 py-2 text-left text-neutral-500">Color</th>
+								<th class="px-3 py-2 text-left text-neutral-500">Played</th>
+								<th class="px-3 py-2 text-left text-neutral-500">Best</th>
+								<th class="px-3 py-2 text-right text-neutral-500">Eval</th>
+								<th class="px-3 py-2 text-right text-neutral-500">Class</th>
+							</tr>
+						</thead>
+						<tbody class="divide-y divide-neutral-800/50">
+							{#each game.moveEvaluations as move}
+								<tr class="bg-neutral-900/50">
+									<td class="px-3 py-1.5 text-neutral-400">{move.moveNumber}</td>
+									<td class="px-3 py-1.5 capitalize text-neutral-400">{move.color}</td>
+									<td class="px-3 py-1.5 font-mono text-neutral-200">{move.playedMoveUci}</td>
+									<td class="px-3 py-1.5 font-mono text-neutral-400">{move.bestMoveUci ?? '--'}</td>
+									<td class="px-3 py-1.5 text-right text-neutral-300">{move.evalCp > 0 ? '+' : ''}{(move.evalCp / 100).toFixed(1)}</td>
+									<td class="px-3 py-1.5 text-right">
+										<span class="rounded-sm px-1.5 py-0.5 text-[10px] font-medium
+											{move.classification === 'BLUNDER' ? 'bg-red-500/20 text-red-400' :
+											 move.classification === 'MISTAKE' ? 'bg-orange-500/20 text-orange-400' :
+											 move.classification === 'INACCURACY' ? 'bg-yellow-500/20 text-yellow-400' :
+											 move.classification === 'BRILLIANT' ? 'bg-cyan-500/20 text-cyan-400' :
+											 move.classification === 'EXCELLENT' ? 'bg-green-500/20 text-green-400' :
+											 'bg-neutral-700 text-neutral-400'}">
+											{move.classification}
+										</span>
+									</td>
+								</tr>
+							{/each}
+						</tbody>
+					</table>
+				</div>
+			</div>
+		{/if}
+	{:else}
+		<div class="rounded-sm border border-dashed border-neutral-700 px-6 py-8 text-center">
+			<p class="text-sm text-neutral-400">This game hasn't been analyzed yet.</p>
+			<p class="mt-1 text-xs text-neutral-500">Analysis will be available once the Stockfish worker processes this game.</p>
+		</div>
+	{/if}
+
+	<!-- Coach CTA -->
+	<a
+		href="/dashboard/coach"
+		class="inline-flex items-center gap-2 rounded-sm border border-gold/30 bg-gold/10 px-4 py-2.5 text-sm font-medium text-gold transition-colors hover:bg-gold/20"
+	>
+		<svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+		Ask coach about this game
+	</a>
+</div>

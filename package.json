@@ -3,9 +3,10 @@
 	"private": true,
 	"type": "module",
 	"scripts": {
-		"dev": "concurrently -n web,api -c cyan,green \"pnpm dev:web\" \"pnpm dev:api\"",
+		"dev": "concurrently -n web,api,sync -c cyan,green,yellow \"pnpm dev:web\" \"pnpm dev:api\" \"pnpm dev:sync\"",
 		"dev:web": "pnpm -F @exort/web dev",
 		"dev:api": "pnpm -F @exort/api dev",
+		"dev:sync": "pnpm -F @exort/sync dev",
 		"build": "pnpm -F @exort/web build",
 		"check": "pnpm -F @exort/web check",
 		"lint": "pnpm -F @exort/web lint",

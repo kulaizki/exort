@@ -1,9 +1,17 @@
-import { redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
+import { api } from '$lib/server/api';
 
 export const load: PageServerLoad = async (event) => {
-	if (!event.locals.user) {
-		return redirect(302, '/login');
-	}
-	return { user: event.locals.user };
+	const token = event.locals.session!.token;
+
+	const [gamesRes, metricsRes] = await Promise.all([
+		api('/games?limit=5&sort=date&order=desc', token),
+		api('/metrics/summary', token)
+	]);
+
+	return {
+		recentGames: gamesRes.data?.data ?? [],
+		totalGames: gamesRes.data?.total ?? 0,
+		metrics: metricsRes.data ?? null
+	};
 };
