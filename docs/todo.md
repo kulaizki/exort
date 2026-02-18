@@ -3,7 +3,7 @@
 ## Architecture
 
 - **Web:** SvelteKit 2.52 + Svelte 5 + Tailwind 4 + Better Auth + Prisma 7 → Cloud Run
-- **API:** Hono + TypeScript + Prisma 7 → Cloud Run
+- **API:** Express + TypeScript + Prisma 7 → Cloud Run
 - **Sync:** Node.js + TypeScript — Lichess delta sync → Cloud Run
 - **Worker:** Python + Stockfish 18 + chess library → VPS (Docker)
 - **Database:** PostgreSQL 16 → VPS
@@ -18,8 +18,13 @@
 - [x] Better Auth + Prisma adapter wired up
 - [x] `.env.example` with placeholder DB URL
 
-## Phase 2: Database Schema
+## Phase 2: Local Dev + Database Schema
 
+- [ ] Docker Compose for local dev (PostgreSQL 16 + pgAdmin optional)
+- [ ] Create `packages/db` shared package (`@exort/db`):
+  - [ ] Single Prisma schema (owns all models + migrations)
+  - [ ] Generated client exported for `web` and `api` to consume
+  - [ ] Move Better Auth models from `apps/web/prisma/` into shared schema
 - [ ] Design PostgreSQL schema:
   - [ ] `users` (Better Auth managed)
   - [ ] `lichess_accounts` (user_id, lichess_username, last_synced_at)
@@ -28,7 +33,6 @@
   - [ ] `game_metrics` (game_id FK, centipawn_loss, blunder_count, accuracy, opening_name, opening_eco, phase_errors JSONB)
   - [ ] `chat_sessions` (id, user_id, created_at)
   - [ ] `chat_messages` (id, session_id, role, content, context JSONB, created_at)
-- [ ] Create Prisma schema in `apps/api/prisma/schema.prisma`
 - [ ] Run `prisma db push` against local Postgres
 - [ ] Add indexes (games.user_id, games.lichess_game_id, analysis_jobs.status, game_metrics.game_id)
 - [ ] Seed script for dev data (optional)
@@ -44,14 +48,16 @@
   - [ ] Store in `lichess_accounts` table
 - [ ] Profile page (user info, connected Lichess account)
 
-## Phase 4: API Service (Hono)
+## Phase 4: API Service (Express)
 
-- [ ] Scaffold `apps/api/` (Hono + TypeScript)
+- [ ] Scaffold `apps/api/` (Express + TypeScript)
   - [ ] `package.json` as `@exort/api`
   - [ ] `src/index.ts` entry point
-  - [ ] Hono app with `/health` route
-  - [ ] Prisma ORM setup (schema, client generation)
-- [ ] Auth middleware (validate Better Auth session token)
+  - [ ] Express app with `/health` route
+  - [ ] Import Prisma client from `@exort/db`
+- [ ] Auth strategy (web → api):
+  - [ ] SvelteKit server-side load functions call API with forwarded session token
+  - [ ] Express middleware validates token against Better Auth session table
 - [ ] CORS config (allow web origin)
 - [ ] Routes:
   - [ ] `GET /games` — list user's games (paginated)
@@ -90,6 +96,7 @@
 - [ ] Scaffold `apps/worker/` (Python)
   - [ ] `requirements.txt` (chess, stockfish wrapper, psycopg2/asyncpg)
   - [ ] Job queue consumer (PgQueuer or Procrastinate)
+- [ ] Job queue contract: shared `analysis_jobs` table used by Node.js (INSERT) and Python (consume)
 - [ ] Stockfish 18 integration:
   - [ ] Download/bundle Stockfish 18 binary in Docker image
   - [ ] Configure analysis depth (depth 20 recommended)
@@ -155,32 +162,35 @@
 
 ## Phase 9: Deploy
 
-- [ ] Docker Compose for local dev (Postgres + worker)
 - [ ] Deploy `web` to Cloud Run:
   - [ ] Dockerfile or adapter-auto
   - [ ] Environment variables (DATABASE_URL, BETTER_AUTH_SECRET, ORIGIN)
   - [ ] Domain: `exort.fitzsixto.com`
 - [ ] Deploy `api` to Cloud Run:
-  - [ ] Dockerfile (Hono + Node.js)
+  - [ ] Dockerfile (Express + Node.js)
   - [ ] Environment variables (DATABASE_URL, VERTEX_AI config, CORS)
   - [ ] Domain: `api.exort.fitzsixto.com`
 - [ ] Deploy `sync` to Cloud Run:
   - [ ] Dockerfile
   - [ ] Cloud Scheduler trigger (optional)
-- [ ] Deploy `worker` to VPS:
-  - [ ] Docker with CPU quotas
-  - [ ] Systemd service or docker-compose
-  - [ ] Stockfish binary bundled
-- [ ] Deploy PostgreSQL on VPS:
-  - [ ] Docker or native install
-  - [ ] Strong password, restricted access
-  - [ ] Backup strategy
+- [ ] Deploy on Coolify VPS:
+  - [ ] PostgreSQL 16 (strong password, restricted access, backup strategy)
+  - [ ] `worker` — Docker with Stockfish binary, CPU quotas
+  - [ ] Coolify reverse proxy + SSL
 - [ ] CI/CD (GitHub Actions):
-  - [ ] Build + deploy on push to main
+  - [ ] Build + deploy Cloud Run services on push to main
   - [ ] Per-service triggers (only redeploy changed services)
+  - [ ] Coolify webhook or manual deploy for VPS services
 - [ ] End-to-end smoke test on production
 
-## Phase 10: Polish
+## Phase 10: Testing
+
+- [ ] API integration tests (Vitest + supertest)
+- [ ] Worker unit tests (pytest — Stockfish analysis pipeline)
+- [ ] Auth flow E2E test (register → login → session validation)
+- [ ] Sync service tests (mock Lichess API responses)
+
+## Phase 11: Polish
 
 - [ ] Error boundaries / empty states
 - [ ] Loading skeletons on all async pages
@@ -204,11 +214,14 @@
 ## Decisions Made
 
 - [x] **pnpm monorepo** — `apps/web` + `apps/api` + `apps/sync` + `apps/worker`
-- [x] **Hono over Express** — Web Standards, 3x throughput, minimal cold starts
+- [x] **Express** — industry-standard Node.js framework, massive ecosystem, proven at scale
 - [x] **Prisma 7 everywhere** — schema-first, auto-generated client, managed migrations, single ORM
-- [x] **Better Auth** — session-based auth, TypeScript-native, Drizzle adapter
+- [x] **Better Auth** — session-based auth, TypeScript-native, Prisma adapter
 - [x] **Stockfish 18** — latest (Jan 2026), +46 Elo over v17
 - [x] **Postgres-backed job queue** — no extra infra, ACID transactional enqueue
 - [x] **Structured SQL RAG** — chess metrics are structured, not prose
 - [x] **Gemini 2.5 Flash** — long context, low latency, cost-effective
-- [x] **Hybrid deploy** — Cloud Run (stateless) + VPS (compute + data)
+- [x] **Hybrid deploy** — Cloud Run (stateless) + Coolify VPS (compute + data)
+
+- [x] **Shared `packages/db`** — single Prisma schema consumed by both `web` and `api`
+- [x] **Coolify** — self-hosted PaaS for VPS (Postgres, worker), reverse proxy + SSL

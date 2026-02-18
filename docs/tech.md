@@ -3,10 +3,10 @@
 ## Architecture
 
 - **Web:** SvelteKit 2.52 + Svelte 5 + Tailwind 4 + Better Auth + Prisma 7 (Cloud Run)
-- **API:** Hono + TypeScript + Prisma ORM (Cloud Run)
+- **API:** Express + TypeScript + Prisma ORM (Cloud Run)
 - **Sync:** Node.js + TypeScript — Lichess delta sync service (Cloud Run)
 - **Worker:** Python + Stockfish 18 + chess library — CPU-bound analysis (VPS)
-- **Database:** PostgreSQL 16 (VPS)
+- **Database:** PostgreSQL 16 (Coolify VPS)
 - **AI:** Vertex AI Gemini 2.5 Flash — structured RAG via SQL retrieval
 
 ---
@@ -34,7 +34,7 @@ Notes:
 - API calls use token-based auth to avoid cross-site cookie complexity
 - Already scaffolded in `apps/web/`
 
-### 2) api — Hono + TypeScript + Prisma (Cloud Run)
+### 2) api — Express + TypeScript + Prisma (Cloud Run)
 
 Responsibilities:
 - Core REST APIs (users, games, metrics, chat)
@@ -43,22 +43,16 @@ Responsibilities:
 - RAG endpoint — structured SQL retrieval + Vertex AI Gemini
 
 Stack:
-- Hono (Web Standards-based, 3x faster than Express, native Cloud Run support)
-- TypeScript
+- Express 5 + TypeScript
 - Prisma ORM (schema-first, auto-generated typed client, managed migrations)
+- Zod (request validation)
 - Vertex AI SDK (@google-cloud/vertexai)
 
 Key patterns:
 - Idempotent upserts using Lichess game ID
 - Transaction-safe writes via Prisma
 - Clear separation between API and worker compute
-
-Why Hono over Express:
-- Built on Web Standards (Fetch API), not Node-specific HTTP APIs
-- 3x throughput, 40% less memory vs Express
-- Zero cold-start overhead on Cloud Run
-- Native TypeScript, built-in validation (Zod via @hono/zod-validator)
-- app.route() for clean modular routing
+- Router-based modular route organization
 
 ### 3) sync — Node.js + TypeScript (Cloud Run)
 
@@ -142,20 +136,27 @@ Why structured SQL over vector embeddings:
 | Service | Image | Scaling |
 |---------|-------|---------|
 | `web`   | SvelteKit + adapter-auto | 0-N instances |
-| `api`   | Hono + Node.js | 0-N instances |
+| `api`   | Express + Node.js | 0-N instances |
 | `sync`  | Node.js scheduled/triggered | 0-1 instances |
 
-### VPS — Compute + Data Layer
+### Coolify VPS — Compute + Data Layer
 
 | Service | Notes |
 |---------|-------|
-| PostgreSQL 16 | Primary database |
+| PostgreSQL 16 | Primary database (Coolify-managed) |
 | `worker` | Python + Stockfish 18 (Docker, CPU-limited) |
+
+Managed via **Coolify** (self-hosted PaaS):
+- One-click Postgres deploy with backups
+- Docker-based worker deployment with resource limits
+- Built-in reverse proxy (Traefik) + automatic SSL
+- GitHub webhook deploys for VPS services
 
 Rationale:
 - Cloud Run: scale-to-zero, easy deploy, free tier for low traffic
-- VPS: Stockfish is CPU-bound, more cost-effective on fixed compute
+- Coolify VPS: Stockfish is CPU-bound, more cost-effective on fixed compute
 - Postgres near worker: reduces network overhead, predictable costs
+- Coolify simplifies VPS ops without Kubernetes overhead
 
 ---
 
@@ -165,10 +166,11 @@ Rationale:
 exort/
 ├── apps/
 │   ├── web/        # SvelteKit UI + Better Auth (Cloud Run)
-│   ├── api/        # Hono API + Prisma (Cloud Run)
+│   ├── api/        # Express API + Prisma (Cloud Run)
 │   ├── sync/       # Lichess sync service (Cloud Run)
 │   └── worker/     # Python + Stockfish analysis (VPS)
 ├── packages/
+│   ├── db/         # shared Prisma schema + generated client (@exort/db)
 │   └── shared/     # shared types/contracts (later)
 ├── docs/
 │   ├── overview.md
@@ -188,7 +190,7 @@ exort/
 - Idempotent external synchronization
 - Structured retrieval before LLM synthesis
 - Hybrid infra chosen for cost/performance realism
-- Prisma ORM everywhere (web + api) — single ORM across monorepo
+- Prisma ORM everywhere via shared `packages/db` — single schema, single ORM across monorepo
 - Clear service boundaries suitable for interview discussion
 
 ---
@@ -196,11 +198,13 @@ exort/
 ## Decisions Made
 
 - [x] **pnpm monorepo** — `apps/web` + `apps/api` + `apps/sync` + `apps/worker`
-- [x] **Hono over Express** — Web Standards, 3x throughput, minimal cold starts on Cloud Run
+- [x] **Express** — industry-standard Node.js framework, massive ecosystem, matches target job stack
 - [x] **Prisma 7 everywhere** — schema-first, auto-generated client, managed migrations, single ORM
 - [x] **Better Auth** — session-based auth, TypeScript-native, Prisma adapter
 - [x] **Stockfish 18** — latest (Jan 2026), +46 Elo over v17
 - [x] **Postgres-backed job queue** — no extra infra, ACID transactional enqueue
 - [x] **Structured SQL RAG** — chess metrics are structured data, not prose
 - [x] **Gemini 2.5 Flash** — long context, low latency, cost-effective for chat
-- [x] **Hybrid deploy** — Cloud Run for stateless, VPS for compute + data
+- [x] **Hybrid deploy** — Cloud Run for stateless, Coolify VPS for compute + data
+
+- [x] **Coolify** — self-hosted PaaS for VPS management (Postgres, worker, reverse proxy, SSL)

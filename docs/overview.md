@@ -19,7 +19,7 @@ Exort is intentionally architected to demonstrate backend software architecture:
 - External API delta synchronization (Lichess)
 - CPU-bound workload isolation (Stockfish worker)
 - Structured RAG (SQL retrieval + LLM synthesis)
-- Hybrid infrastructure (GCP for stateless, VPS for compute + DB)
+- Hybrid infrastructure (GCP Cloud Run for stateless, Coolify VPS for compute + DB)
 - Production-minded boundaries (idempotency, retries, async jobs)
 
 ---
