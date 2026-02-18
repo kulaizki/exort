@@ -85,7 +85,7 @@ Stack:
 - Python 3.12+
 - chess 1.11.2 (formerly python-chess)
 - Stockfish 18 (released Jan 2026)
-- PostgreSQL-backed job queue (PgQueuer or Procrastinate)
+- PostgreSQL-backed job queue (poll-based, `FOR UPDATE SKIP LOCKED`)
 
 Design:
 - CPU-bound workload isolated from API/web services

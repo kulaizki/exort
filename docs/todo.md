@@ -183,51 +183,51 @@
 
 ## Phase 7: Dashboard UI (Web) ✅
 
-Layout: collapsible sidebar + main content area. Feature module: `$lib/features/dashboard/`.
-Sidebar order: Dashboard, Games, Insights, Coach — Settings at bottom.
+Layout: fixed sidebar + main content area. Feature module: `$lib/features/dashboard/`.
+Sidebar order: Dashboard, Games, Insights, Coach, Settings. User info at bottom.
 
 - [x] Dashboard layout (`/dashboard`)
-  - [x] Collapsible sidebar (icon-only on collapse, dark bg)
+  - [x] Fixed-width sidebar (w-56, dark bg)
   - [x] Auth guard (redirect to `/login` if unauthenticated)
-  - [x] `+layout.svelte` with sidebar + `<slot />` content area
+  - [x] `(app)` route group with shared `+layout.svelte` (sidebar + auth guard)
   - [x] Active route highlighting in sidebar
   - [x] User avatar / name at bottom of sidebar
   - [x] Mobile: hamburger toggle, slide-in sidebar overlay
 - [x] Dashboard overview (`/dashboard` — index page)
   - [x] Stat cards: total games synced, average accuracy, blunder rate, games this week
   - [ ] Accuracy trend sparkline (last 30 days)
-  - [x] Recent games list (5 most recent — result, accuracy, opening, click to detail)
+  - [x] Recent games list (7 most recent — result, accuracy, opening, click to detail)
   - [ ] Pending analysis count
   - [x] Quick actions: "Sync games" button, "Ask coach" shortcut
-- [x] Games page (`/dashboard/games`)
+- [x] Games page (`/games`)
   - [x] Table view: date, opponent, result (W/D/L badge), time control, opening, accuracy, analysis status
   - [x] Filters: time control, result, date range, opening
   - [x] Sort: by date, accuracy, blunder count
   - [x] "Sync new games from Lichess" button
   - [x] Click row → game detail
   - [ ] Loading skeletons
-- [x] Game detail page (`/dashboard/games/[id]`)
+- [x] Game detail page (`/games/[id]`)
   - [x] Header: opponent, result, time control, date, opening (ECO + name)
   - [x] Metrics panel: accuracy %, centipawn loss, blunders/mistakes/inaccuracies counts
   - [x] Phase breakdown: opening/middlegame/endgame error counts (from phase_errors JSONB)
   - [x] Move list with per-move eval bar (stretch goal)
   - [x] "Ask coach about this game" button → opens chat with game context
-- [x] Insights page (`/dashboard/insights`)
+- [x] Insights page (`/insights`)
   - [x] Accuracy over time line chart (weekly/monthly toggle)
   - [x] Blunder rate trend line chart
   - [x] Opening breakdown: bar/pie chart of most played openings with win rate
   - [x] Time control comparison: accuracy by bullet/blitz/rapid/classical
   - [x] Weakness summary: auto-derived text ("You blunder most in the endgame", etc.)
-- [x] Settings page (`/dashboard/settings`)
+- [x] Settings page (`/settings`)
   - [x] Profile: name, email (editable)
   - [x] Lichess connection: connected username, last synced, connect/disconnect button
   - [x] Account: change password, delete account
 
 ## Phase 8: RAG Chat (Coach) ✅
 
-Feature module: `$lib/features/coach/`. Route: `/dashboard/coach`.
+Feature module: `$lib/features/coach/`. Route: `/coach`.
 
-- [x] Coach page (`/dashboard/coach`)
+- [x] Coach page (`/coach`)
   - [x] Session list (left sub-panel)
   - [x] Chat thread: user + assistant messages
   - [x] Input bar with send button
@@ -262,16 +262,13 @@ Feature module: `$lib/features/coach/`. Route: `/dashboard/coach`.
 - [ ] Deploy `sync` to Cloud Run:
   - [ ] Dockerfile
   - [ ] Cloud Scheduler trigger (optional)
-- [ ] Pub/Sub for job dispatch:
-  - [ ] Topic: `analysis-jobs` (sync publishes, worker subscribes)
-  - [ ] Push subscription to worker or pull from VPS
 - [ ] Deploy on Coolify VPS:
   - [ ] PostgreSQL 16 (strong password, restricted access, backup strategy)
   - [ ] `worker` — Docker with Stockfish binary, CPU quotas
   - [ ] Coolify reverse proxy + SSL
   - [ ] Cloud Run services connect to VPS Postgres over public IP (no Cloud SQL needed)
 - [ ] Terraform IaC:
-  - [ ] Cloud Run services, Pub/Sub topics, Artifact Registry
+  - [ ] Cloud Run services, Artifact Registry
   - [ ] Environment variables and IAM roles
 - [ ] CI/CD (GitHub Actions):
   - [ ] Build + deploy Cloud Run services on push to main
@@ -331,7 +328,7 @@ Tests colocated with features: `features/[name]/__tests__/[name].test.ts`
 - [x] **Prisma 7 everywhere** — schema-first, auto-generated client, managed migrations, single ORM
 - [x] **Better Auth** — session-based auth, TypeScript-native, Prisma adapter
 - [x] **Stockfish 18** — latest (Jan 2026), +46 Elo over v17
-- [x] **Pub/Sub job dispatch** — Cloud Run sync → Pub/Sub → VPS worker (event-driven, showcases GCP)
+- [x] **Postgres-backed job queue** — poll-based with `FOR UPDATE SKIP LOCKED`, no extra infra needed
 - [x] **Structured SQL RAG** — chess metrics are structured, not prose
 - [x] **Gemini 2.5 Flash** — long context, low latency, cost-effective
 - [x] **Hybrid deploy** — Cloud Run (stateless) + Coolify VPS (Postgres + Stockfish worker)
