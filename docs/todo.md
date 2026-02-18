@@ -18,7 +18,7 @@
 - [x] Better Auth + Prisma adapter wired up
 - [x] `.env.example` with placeholder DB URL
 - [x] Feature-based frontend structure (`lib/features/`, barrel exports)
-- [x] Branding guide + gold theme + Manrope font
+- [x] Branding guide + gold theme + Ubuntu/Ubuntu Mono fonts
 - [x] `CLAUDE.md` project conventions
 
 ## Phase 2: Local Dev + Database Schema
@@ -43,17 +43,26 @@
 ## Phase 2.5: Landing Page ✅
 
 - [x] Public landing page (`/` route)
-  - [x] Header (floating nav, logo, centered links, sign in / get started CTAs)
-  - [x] Hero section (tagline, CTA)
-  - [x] Features section (sync, analysis, coaching)
-  - [x] How it works (3-step flow)
-  - [x] Final CTA (sign up)
-  - [x] Footer (brand, link columns, GitHub, copyright)
-- [x] Follow branding guide (dark + gold, Manrope, xs radius)
+  - [x] Header (floating nav, logo, centered links, sign in / get started CTAs, full-width mobile)
+  - [x] Hero section (tagline, CTA, tech specs row, interactive chessboard canvas background)
+  - [x] Features section (bento grid with mock UI elements — eval bar, game feed, chat)
+  - [x] How it works (3-step flow with circular badges, bullet details)
+  - [x] Final CTA (gold border, corner accents, benefits row)
+  - [x] Footer (brand + logo, link columns, GitHub, copyright)
+- [x] Follow branding guide (dark + gold, xs radius)
+- [x] Custom logo (gold flame SVG, cropped viewBox)
+- [x] Fonts: Ubuntu (body), Ubuntu Mono (logo wordmark)
+- [x] Shared `ChessboardBg` component (`$lib/components/`)
+- [x] `<svelte:head>` titles on all pages
 
 ## Phase 3: Auth + Lichess Connect (Web)
 
-- [ ] Better Auth login / register pages (email/password)
+- [x] Better Auth login / register pages (email/password)
+  - [x] Login page (`/login`) with form actions, error display, themed UI
+  - [x] Register page (`/register`) with form actions, error display, themed UI
+  - [x] Feature-based structure (`$lib/features/auth/`)
+  - [x] Interactive chessboard background on auth pages
+  - [x] Back buttons linking to landing page
 - [ ] Lichess OAuth2 login ("Sign in with Lichess"):
   - [ ] Register Lichess OAuth app (`https://lichess.org/account/oauth/app`)
   - [ ] Add Lichess as custom OAuth provider in Better Auth
