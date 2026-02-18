@@ -9,7 +9,7 @@ COPY apps/sync/package.json apps/sync/
 RUN pnpm install --frozen-lockfile
 COPY apps/sync/ apps/sync/
 RUN pnpm -F @exort/sync build
-RUN pnpm deploy --filter @exort/sync --prod /app/deploy
+RUN pnpm deploy --filter @exort/sync --prod --legacy /app/deploy
 
 FROM base AS runtime
 WORKDIR /app

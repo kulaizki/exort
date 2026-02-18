@@ -9,7 +9,7 @@ COPY apps/api/package.json apps/api/
 RUN pnpm install --frozen-lockfile
 COPY apps/api/ apps/api/
 RUN pnpm -F @exort/api build
-RUN pnpm deploy --filter @exort/api --prod /app/deploy
+RUN pnpm deploy --filter @exort/api --prod --legacy /app/deploy
 
 FROM base AS runtime
 WORKDIR /app

@@ -9,7 +9,7 @@ COPY apps/web/package.json apps/web/
 RUN pnpm install --frozen-lockfile
 COPY apps/web/ apps/web/
 RUN pnpm -F @exort/web build
-RUN pnpm deploy --filter @exort/web --prod /app/deploy
+RUN pnpm deploy --filter @exort/web --prod --legacy /app/deploy
 
 FROM base AS runtime
 WORKDIR /app
