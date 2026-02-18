@@ -4,12 +4,10 @@ RUN corepack enable
 FROM base AS build
 WORKDIR /app
 COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
-COPY packages/db/package.json packages/db/
+COPY packages/db/ packages/db/
 COPY apps/api/package.json apps/api/
 RUN pnpm install --frozen-lockfile
-COPY packages/db/ packages/db/
 COPY apps/api/ apps/api/
-RUN pnpm -F @exort/db db:generate
 RUN pnpm -F @exort/api build
 
 FROM base AS runtime
