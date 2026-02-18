@@ -16,6 +16,7 @@ class MoveEval:
     move_number: int
     color: str
     eval_cp: int
+    cp_loss: int
     best_move_uci: str | None
     played_move_uci: str
     classification: str
@@ -42,11 +43,13 @@ class AnalysisResult:
 def _cp_from_info(info: dict) -> int | None:
     if info is None:
         return None
-    cp = info.get("Centipawn")
-    mate = info.get("Mate")
-    if mate is not None:
-        return 10000 if mate > 0 else -10000
-    return cp
+    eval_type = info.get("type")
+    value = info.get("value")
+    if eval_type == "mate" and value is not None:
+        return 10000 if value > 0 else -10000
+    if eval_type == "cp" and value is not None:
+        return value
+    return None
 
 
 def analyze_game(pgn: str, game_id: str) -> AnalysisResult:
@@ -100,6 +103,7 @@ def analyze_game(pgn: str, game_id: str) -> AnalysisResult:
             move_number=move_number,
             color=color,
             eval_cp=eval_cp,
+            cp_loss=cp_loss,
             best_move_uci=best_move_result,
             played_move_uci=played_move.uci(),
             classification=classification,
@@ -107,9 +111,9 @@ def analyze_game(pgn: str, game_id: str) -> AnalysisResult:
 
         node = next_node
 
-    sf.send_quit_token()
+    del sf
 
-    cp_losses = [abs(m.eval_cp) for m in move_evals]
+    cp_losses = [m.cp_loss for m in move_evals]
     accuracy = calculate_accuracy(cp_losses)
     avg_cp_loss = round(sum(cp_losses) / len(cp_losses), 2) if cp_losses else 0.0
 
