@@ -1,17 +1,28 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { ChessboardBg } from '$lib/components';
 
 	type Props = {
 		form: { message?: string } | null;
 	};
 
 	let { form }: Props = $props();
+	let chessboard: ReturnType<typeof ChessboardBg>;
 </script>
 
-<div class="flex min-h-screen items-center justify-center bg-neutral-950 px-4">
+<!-- svelte-ignore a11y_no_static_element_interactions -->
+<div
+	class="relative flex min-h-screen items-center justify-center bg-neutral-950 px-4"
+	onmousemove={(e) => chessboard?.trackMouse(e)}
+	onmouseleave={() => chessboard?.clearMouse()}
+>
+	<div class="pointer-events-none absolute inset-0">
+		<ChessboardBg bind:this={chessboard} />
+	</div>
+
 	<a
 		href="/"
-		class="fixed top-6 left-6 flex items-center gap-1.5 text-sm text-neutral-400 transition-colors hover:text-neutral-200"
+		class="fixed top-6 left-6 z-10 flex items-center gap-1.5 text-sm text-neutral-400 transition-colors hover:text-neutral-200"
 	>
 		<svg
 			xmlns="http://www.w3.org/2000/svg"
@@ -29,7 +40,7 @@
 		Back
 	</a>
 
-	<div class="w-full max-w-sm">
+	<div class="relative w-full max-w-sm">
 		<div class="mb-8 flex items-center justify-center gap-2">
 			<img src="/exort-logo.svg" alt="" class="h-7 w-auto" />
 			<span class="font-logo text-lg font-bold text-neutral-200">exort</span>

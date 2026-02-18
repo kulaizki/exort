@@ -1,8 +1,21 @@
 <script lang="ts">
 	import { inview } from '$lib/actions/inview';
+	import { ChessboardBg } from '$lib/components';
+
+	let chessboard: ReturnType<typeof ChessboardBg>;
 </script>
 
-<section class="relative flex min-h-screen items-center justify-center overflow-hidden pt-16">
+<!-- svelte-ignore a11y_no_static_element_interactions -->
+<section
+	class="relative flex min-h-screen items-center justify-center overflow-hidden pt-16"
+	onmousemove={(e) => chessboard?.trackMouse(e)}
+	onmouseleave={() => chessboard?.clearMouse()}
+>
+	<!-- Interactive chessboard grid -->
+	<div class="pointer-events-none absolute inset-0">
+		<ChessboardBg bind:this={chessboard} />
+	</div>
+
 	<!-- Subtle radial glow -->
 	<div class="pointer-events-none absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2">
 		<div class="h-[600px] w-[600px] rounded-full bg-gold/6 blur-[150px]"></div>
