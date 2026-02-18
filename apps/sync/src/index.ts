@@ -1,9 +1,9 @@
 import 'dotenv/config';
-import express from 'express';
+import express, { type Express } from 'express';
 import { config } from './config/index.js';
 import { SyncService } from './sync/service.js';
 
-const app = express();
+const app: Express = express();
 
 app.use(express.json());
 
