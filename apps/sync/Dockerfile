@@ -10,6 +10,9 @@ COPY apps/sync/package.json apps/sync/
 RUN pnpm install --frozen-lockfile
 COPY apps/sync/ apps/sync/
 RUN pnpm -F @exort/sync build
+RUN mkdir -p /app/db-bundle && \
+    echo '{"name":"@exort/db","type":"module","main":"index.js"}' > /app/db-bundle/package.json && \
+    npx esbuild packages/db/src/index.ts --bundle --format=esm --platform=node --outfile=/app/db-bundle/index.js '--external:@prisma/*'
 
 # Stage 2: Production dependencies
 FROM base AS deps
@@ -22,6 +25,7 @@ RUN npm install --omit=dev --ignore-scripts
 FROM node:20-slim AS runtime
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
+COPY --from=builder /app/db-bundle ./node_modules/@exort/db
 COPY --from=builder /app/apps/sync/dist ./dist
 COPY --from=builder /app/apps/sync/package.json ./
 ENV NODE_ENV=production
