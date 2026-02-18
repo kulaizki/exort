@@ -2,8 +2,8 @@
 
 ## Architecture
 
-- **Web:** SvelteKit 2.52 + Svelte 5 + Tailwind 4 + Better Auth + Drizzle ORM → Cloud Run
-- **API:** Hono + TypeScript + Drizzle ORM → Cloud Run
+- **Web:** SvelteKit 2.52 + Svelte 5 + Tailwind 4 + Better Auth + Prisma 7 → Cloud Run
+- **API:** Hono + TypeScript + Prisma 7 → Cloud Run
 - **Sync:** Node.js + TypeScript — Lichess delta sync → Cloud Run
 - **Worker:** Python + Stockfish 18 + chess library → VPS (Docker)
 - **Database:** PostgreSQL 16 → VPS
@@ -15,7 +15,7 @@
 - [x] Scaffold SvelteKit frontend (`apps/web`)
 - [x] Root `package.json` + `pnpm-workspace.yaml`
 - [x] Tailwind CSS 4, ESLint, Prettier configured
-- [x] Better Auth + Drizzle ORM wired up
+- [x] Better Auth + Prisma adapter wired up
 - [x] `.env.example` with placeholder DB URL
 
 ## Phase 2: Database Schema
@@ -28,8 +28,8 @@
   - [ ] `game_metrics` (game_id FK, centipawn_loss, blunder_count, accuracy, opening_name, opening_eco, phase_errors JSONB)
   - [ ] `chat_sessions` (id, user_id, created_at)
   - [ ] `chat_messages` (id, session_id, role, content, context JSONB, created_at)
-- [ ] Create Drizzle schema files in `apps/web/src/lib/server/db/`
-- [ ] Run `drizzle-kit push` against local Postgres
+- [ ] Create Prisma schema in `apps/api/prisma/schema.prisma`
+- [ ] Run `prisma db push` against local Postgres
 - [ ] Add indexes (games.user_id, games.lichess_game_id, analysis_jobs.status, game_metrics.game_id)
 - [ ] Seed script for dev data (optional)
 
@@ -50,7 +50,7 @@
   - [ ] `package.json` as `@exort/api`
   - [ ] `src/index.ts` entry point
   - [ ] Hono app with `/health` route
-  - [ ] Drizzle ORM connection (same schema as web)
+  - [ ] Prisma ORM setup (schema, client generation)
 - [ ] Auth middleware (validate Better Auth session token)
 - [ ] CORS config (allow web origin)
 - [ ] Routes:
@@ -205,7 +205,7 @@
 
 - [x] **pnpm monorepo** — `apps/web` + `apps/api` + `apps/sync` + `apps/worker`
 - [x] **Hono over Express** — Web Standards, 3x throughput, minimal cold starts
-- [x] **Drizzle over Prisma** — already in web, SQL-transparent, no binary deps
+- [x] **Prisma 7 everywhere** — schema-first, auto-generated client, managed migrations, single ORM
 - [x] **Better Auth** — session-based auth, TypeScript-native, Drizzle adapter
 - [x] **Stockfish 18** — latest (Jan 2026), +46 Elo over v17
 - [x] **Postgres-backed job queue** — no extra infra, ACID transactional enqueue

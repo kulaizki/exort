@@ -29,5 +29,5 @@ vite.config.ts.timestamp-*
 *.swp
 *.swo
 
-# Drizzle
-drizzle/
+# Prisma
+**/generated/prisma

@@ -2,8 +2,8 @@
 
 ## Architecture
 
-- **Web:** SvelteKit 2.52 + Svelte 5 + Tailwind 4 + Better Auth + Drizzle ORM (Cloud Run)
-- **API:** Hono + TypeScript + Drizzle ORM (Cloud Run)
+- **Web:** SvelteKit 2.52 + Svelte 5 + Tailwind 4 + Better Auth + Prisma 7 (Cloud Run)
+- **API:** Hono + TypeScript + Prisma ORM (Cloud Run)
 - **Sync:** Node.js + TypeScript — Lichess delta sync service (Cloud Run)
 - **Worker:** Python + Stockfish 18 + chess library — CPU-bound analysis (VPS)
 - **Database:** PostgreSQL 16 (VPS)
@@ -24,32 +24,33 @@ Responsibilities:
 Stack:
 - SvelteKit 2.52 + Svelte 5 (runes)
 - Tailwind CSS 4 (@tailwindcss/vite)
-- Better Auth 1.4.x
-- Drizzle ORM + postgres.js
+- Better Auth 1.4.x (Prisma adapter)
+- Prisma 7 (@prisma/adapter-pg)
 - adapter-auto (Cloud Run compatible)
 
 Notes:
-- Auth handled in `web` via Better Auth
+- Auth handled in `web` via Better Auth with `prismaAdapter`
+- Prisma used everywhere — single ORM across monorepo
 - API calls use token-based auth to avoid cross-site cookie complexity
 - Already scaffolded in `apps/web/`
 
-### 2) api — Hono + TypeScript + Drizzle (Cloud Run)
+### 2) api — Hono + TypeScript + Prisma (Cloud Run)
 
 Responsibilities:
 - Core REST APIs (users, games, metrics, chat)
-- Drizzle-based DB access (PostgreSQL on VPS)
+- Prisma-based DB access (PostgreSQL on VPS)
 - Job orchestration (enqueue analysis jobs)
 - RAG endpoint — structured SQL retrieval + Vertex AI Gemini
 
 Stack:
 - Hono (Web Standards-based, 3x faster than Express, native Cloud Run support)
 - TypeScript
-- Drizzle ORM + postgres.js (same ORM as web for consistency)
+- Prisma ORM (schema-first, auto-generated typed client, managed migrations)
 - Vertex AI SDK (@google-cloud/vertexai)
 
 Key patterns:
 - Idempotent upserts using Lichess game ID
-- Transaction-safe writes via Drizzle
+- Transaction-safe writes via Prisma
 - Clear separation between API and worker compute
 
 Why Hono over Express:
@@ -164,7 +165,7 @@ Rationale:
 exort/
 ├── apps/
 │   ├── web/        # SvelteKit UI + Better Auth (Cloud Run)
-│   ├── api/        # Hono API + Drizzle (Cloud Run)
+│   ├── api/        # Hono API + Prisma (Cloud Run)
 │   ├── sync/       # Lichess sync service (Cloud Run)
 │   └── worker/     # Python + Stockfish analysis (VPS)
 ├── packages/
@@ -187,7 +188,7 @@ exort/
 - Idempotent external synchronization
 - Structured retrieval before LLM synthesis
 - Hybrid infra chosen for cost/performance realism
-- Single ORM (Drizzle) across all TypeScript services
+- Prisma ORM everywhere (web + api) — single ORM across monorepo
 - Clear service boundaries suitable for interview discussion
 
 ---
@@ -196,8 +197,8 @@ exort/
 
 - [x] **pnpm monorepo** — `apps/web` + `apps/api` + `apps/sync` + `apps/worker`
 - [x] **Hono over Express** — Web Standards, 3x throughput, minimal cold starts on Cloud Run
-- [x] **Drizzle over Prisma** — already in web, SQL-transparent, lighter for serverless, no binary deps
-- [x] **Better Auth** — session-based auth, TypeScript-native, Drizzle adapter
+- [x] **Prisma 7 everywhere** — schema-first, auto-generated client, managed migrations, single ORM
+- [x] **Better Auth** — session-based auth, TypeScript-native, Prisma adapter
 - [x] **Stockfish 18** — latest (Jan 2026), +46 Elo over v17
 - [x] **Postgres-backed job queue** — no extra infra, ACID transactional enqueue
 - [x] **Structured SQL RAG** — chess metrics are structured data, not prose
