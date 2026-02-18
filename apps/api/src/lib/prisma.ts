@@ -1,7 +1,7 @@
 import { PrismaClient } from '@exort/db';
 import { PrismaPg } from '@prisma/adapter-pg';
-import { DATABASE_URL } from '$env/static/private';
+import { config } from '../config/index.js';
 
-const adapter = new PrismaPg({ connectionString: DATABASE_URL });
+const adapter = new PrismaPg({ connectionString: config.DATABASE_URL });
 
 export const prisma = new PrismaClient({ adapter });

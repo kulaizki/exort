@@ -31,13 +31,20 @@
 - [ ] Design PostgreSQL schema:
   - [ ] `users` (Better Auth managed)
   - [ ] `lichess_accounts` (user_id, lichess_username, last_synced_at)
-  - [ ] `games` (lichess_game_id PK, user_id, pgn, time_control, result, played_at, etc.)
-  - [ ] `analysis_jobs` (id, game_id, status, created_at, started_at, completed_at)
-  - [ ] `game_metrics` (game_id FK, centipawn_loss, blunder_count, accuracy, opening_name, opening_eco, phase_errors JSONB)
-  - [ ] `chat_sessions` (id, user_id, created_at)
-  - [ ] `chat_messages` (id, session_id, role, content, context JSONB, created_at)
+  - [ ] `games` (lichess_game_id PK, user_id, pgn, time_control, result, played_at, opponent, color, rated, variant, clock_initial, clock_increment, player_rating, opponent_rating, status)
+  - [ ] `analysis_jobs` (id, game_id, status enum [pending/processing/completed/failed], created_at, started_at, completed_at)
+  - [ ] `game_metrics` (game_id FK, centipawn_loss, accuracy, blunder_count, mistake_count, inaccuracy_count, opening_name, opening_eco, phase_errors JSONB)
+  - [ ] `move_evaluations` (id, game_id FK, move_number, color, eval_cp, best_move_uci, played_move_uci, classification enum [blunder/mistake/inaccuracy/good/excellent/brilliant])
+  - [ ] `chat_sessions` (id, user_id, title, game_id FK nullable, created_at)
+  - [ ] `chat_messages` (id, session_id FK, role enum [user/assistant], content, context JSONB, created_at)
 - [ ] Run `prisma db push` against local Postgres
-- [ ] Add indexes (games.user_id, games.lichess_game_id, analysis_jobs.status, game_metrics.game_id)
+- [ ] Add indexes:
+  - [ ] `games`: user_id, lichess_game_id (unique), played_at, time_control
+  - [ ] `analysis_jobs`: status, game_id
+  - [ ] `game_metrics`: game_id
+  - [ ] `move_evaluations`: game_id, (game_id + move_number) composite
+  - [ ] `chat_sessions`: user_id
+  - [ ] `chat_messages`: session_id
 - [ ] Seed script for dev data (optional)
 
 ## Phase 2.5: Landing Page ✅
@@ -65,6 +72,8 @@
   - [x] Feature-based structure (`$lib/features/auth/`)
   - [x] Interactive chessboard background on auth pages
   - [x] Back buttons linking to landing page
+  - [x] "Sign in/up with Lichess" button UI (official Lichess knight logo)
+  - [x] Login field accepts "Username or email"
 - [ ] Lichess OAuth2 login ("Sign in with Lichess"):
   - [ ] Register Lichess OAuth app (`https://lichess.org/account/oauth/app`)
   - [ ] Add Lichess as custom OAuth provider in Better Auth
@@ -78,23 +87,45 @@
 
 - [ ] Scaffold `apps/api/` (Express + TypeScript)
   - [ ] `package.json` as `@exort/api`
-  - [ ] `src/index.ts` entry point
+  - [ ] `src/index.ts` entry point (Express app, middleware registration, route mounting)
+  - [ ] `src/config/index.ts` — env config with Zod validation
   - [ ] Express app with `/health` route
   - [ ] Import Prisma client from `@exort/db`
+- [ ] Feature-based structure (`src/features/`):
+  - [ ] Each feature: `router.ts` (HTTP) → `service.ts` (logic) → Prisma (data)
+  - [ ] `schema.ts` per feature — Zod request/response validation
+  - [ ] Barrel exports: `features/[name]/index.ts` → `features/index.ts`
+  - [ ] Features: games, metrics, sync, analysis, coach, profile, lichess
+- [ ] Middleware (`src/middleware/`):
+  - [ ] `auth.ts` — session validation (Better Auth token check against session table)
+  - [ ] `cors.ts` — CORS config (allow web origin)
+  - [ ] `error.ts` — global error handler (Zod errors → 400, unknown → 500)
 - [ ] Auth strategy (web → api):
   - [ ] SvelteKit server-side load functions call API with forwarded session token
   - [ ] Express middleware validates token against Better Auth session table
-- [ ] CORS config (allow web origin)
 - [ ] Routes:
-  - [ ] `GET /games` — list user's games (paginated)
-  - [ ] `GET /games/:id` — game detail + metrics
-  - [ ] `GET /metrics/summary` — aggregate stats (avg accuracy, blunder rate, opening breakdown)
-  - [ ] `GET /metrics/trends` — time-series metrics (weekly/monthly)
-  - [ ] `POST /sync/trigger` — trigger Lichess sync for user
-  - [ ] `POST /analysis/enqueue` — enqueue analysis job for a game
-  - [ ] `GET /analysis/status/:jobId` — poll job status
-  - [ ] `POST /chat` — RAG chat endpoint
-  - [ ] `GET /chat/sessions` — list user's chat sessions
+  - [ ] **Games:**
+    - [ ] `GET /games` — list user's games (paginated, filterable by time_control, result, date range, opening)
+    - [ ] `GET /games/:id` — game detail + metrics + move evaluations
+  - [ ] **Metrics:**
+    - [ ] `GET /metrics/summary` — aggregate stats (avg accuracy, blunder/mistake/inaccuracy rates, opening breakdown)
+    - [ ] `GET /metrics/trends` — time-series metrics (weekly/monthly accuracy, blunder rate)
+  - [ ] **Sync:**
+    - [ ] `POST /sync/trigger` — trigger Lichess sync for user
+  - [ ] **Analysis:**
+    - [ ] `POST /analysis/enqueue` — enqueue analysis job for a game
+    - [ ] `GET /analysis/status/:jobId` — poll job status
+  - [ ] **Coach (Chat):**
+    - [ ] `POST /chat/sessions` — create new chat session (optional game_id for game-specific coaching)
+    - [ ] `GET /chat/sessions` — list user's chat sessions
+    - [ ] `DELETE /chat/sessions/:id` — delete a chat session
+    - [ ] `GET /chat/sessions/:id/messages` — load messages for a session
+    - [ ] `POST /chat/sessions/:id/messages` — send message, get AI response (streaming)
+  - [ ] **Settings:**
+    - [ ] `GET /profile` — user info + connected Lichess account
+    - [ ] `PATCH /profile` — update name/email
+    - [ ] `POST /lichess/connect` — initiate Lichess OAuth link
+    - [ ] `DELETE /lichess/disconnect` — unlink Lichess account
 - [ ] Dockerfile for Cloud Run
 - [ ] Add `dev:api` script to root `package.json` + concurrently
 
@@ -102,10 +133,15 @@
 
 - [ ] Scaffold `apps/sync/` (Node.js + TypeScript)
   - [ ] `package.json` as `@exort/sync`
-  - [ ] Lichess API client (NDJSON streaming)
+  - [ ] `src/lichess/client.ts` — Lichess API client (NDJSON streaming)
+  - [ ] `src/lichess/parser.ts` — parse NDJSON → typed game objects
+  - [ ] `src/lichess/types.ts` — Lichess API response types
+  - [ ] `src/sync/service.ts` — delta sync orchestration
+  - [ ] `src/sync/mapper.ts` — map Lichess API data → DB schema fields
+  - [ ] `src/jobs/enqueue.ts` — enqueue analysis jobs for new games
 - [ ] Delta sync logic:
   - [ ] Fetch games since `last_synced_at` from `https://lichess.org/api/games/user/{username}`
-  - [ ] Parse NDJSON stream
+  - [ ] Parse NDJSON stream, extract all fields (opponent, color, rated, variant, clock, ratings, status, PGN)
   - [ ] Idempotent upsert games (ON CONFLICT lichess_game_id DO NOTHING)
   - [ ] Update `last_synced_at` in `lichess_accounts`
 - [ ] Rate limit handling (Lichess API: respect 429 + `X-RateLimit-*` headers)
@@ -131,11 +167,13 @@
   - [ ] Parse PGN using `chess` library
   - [ ] Run Stockfish evaluation on each move
   - [ ] Compute centipawn loss per move
-  - [ ] Count blunders (>200cp loss), mistakes (>100cp), inaccuracies (>50cp)
+  - [ ] Classify each move: blunder (>200cp), mistake (>100cp), inaccuracy (>50cp), good, excellent, brilliant
+  - [ ] Store per-move data in `move_evaluations` (eval_cp, best_move_uci, played_move_uci, classification)
+  - [ ] Aggregate into `game_metrics`: accuracy, centipawn_loss, blunder/mistake/inaccuracy counts
   - [ ] Estimate overall accuracy (lichess-style formula)
   - [ ] Classify opening (ECO code + name from PGN headers or lookup)
   - [ ] Detect phase-based errors (opening/middlegame/endgame)
-- [ ] Write `game_metrics` to PostgreSQL
+- [ ] Write `game_metrics` + `move_evaluations` to PostgreSQL
 - [ ] Update `analysis_jobs` status (processing → completed / failed)
 - [ ] Dockerfile with:
   - [ ] Stockfish 18 binary
@@ -145,40 +183,64 @@
 
 ## Phase 7: Dashboard UI (Web)
 
-- [ ] Games list page:
-  - [ ] Table/cards showing synced games
-  - [ ] Status badge (pending analysis / analyzed)
-  - [ ] Click to view detail
-- [ ] Game detail page:
-  - [ ] Game info (opponent, result, time control, opening)
-  - [ ] Metrics display (accuracy, blunders, centipawn loss)
-  - [ ] Move-by-move eval bar (if time permits)
-- [ ] Dashboard overview:
-  - [ ] Total games synced
-  - [ ] Average accuracy
-  - [ ] Blunder rate trend
-  - [ ] Most played openings
-- [ ] Metrics/trends page:
-  - [ ] Line charts (accuracy over time, blunder rate)
-  - [ ] Opening breakdown (pie/bar chart)
-  - [ ] Time control comparison
-- [ ] Sync trigger button ("Sync new games from Lichess")
-- [ ] Loading states / skeletons for async data
+Layout: collapsible sidebar + main content area. Feature module: `$lib/features/dashboard/`.
+Sidebar order: Dashboard, Games, Insights, Coach — Settings at bottom.
 
-## Phase 8: RAG Chat
+- [ ] Dashboard layout (`/dashboard`)
+  - [ ] Collapsible sidebar (icon-only on collapse, dark bg)
+  - [ ] Auth guard (redirect to `/login` if unauthenticated)
+  - [ ] `+layout.svelte` with sidebar + `<slot />` content area
+  - [ ] Active route highlighting in sidebar
+  - [ ] User avatar / name at bottom of sidebar
+  - [ ] Mobile: hamburger toggle, slide-in sidebar overlay
+- [ ] Dashboard overview (`/dashboard` — index page)
+  - [ ] Stat cards: total games synced, average accuracy, blunder rate, games this week
+  - [ ] Accuracy trend sparkline (last 30 days)
+  - [ ] Recent games list (5 most recent — result, accuracy, opening, click to detail)
+  - [ ] Pending analysis count
+  - [ ] Quick actions: "Sync games" button, "Ask coach" shortcut
+- [ ] Games page (`/dashboard/games`)
+  - [ ] Table view: date, opponent, result (W/D/L badge), time control, opening, accuracy, analysis status
+  - [ ] Filters: time control, result, date range, opening
+  - [ ] Sort: by date, accuracy, blunder count
+  - [ ] "Sync new games from Lichess" button
+  - [ ] Click row → game detail
+  - [ ] Loading skeletons
+- [ ] Game detail page (`/dashboard/games/[id]`)
+  - [ ] Header: opponent, result, time control, date, opening (ECO + name)
+  - [ ] Metrics panel: accuracy %, centipawn loss, blunders/mistakes/inaccuracies counts
+  - [ ] Phase breakdown: opening/middlegame/endgame error counts (from phase_errors JSONB)
+  - [ ] Move list with per-move eval bar (stretch goal)
+  - [ ] "Ask coach about this game" button → opens chat with game context
+- [ ] Insights page (`/dashboard/insights`)
+  - [ ] Accuracy over time line chart (weekly/monthly toggle)
+  - [ ] Blunder rate trend line chart
+  - [ ] Opening breakdown: bar/pie chart of most played openings with win rate
+  - [ ] Time control comparison: accuracy by bullet/blitz/rapid/classical
+  - [ ] Weakness summary: auto-derived text ("You blunder most in the endgame", etc.)
+- [ ] Settings page (`/dashboard/settings`)
+  - [ ] Profile: name, email (editable)
+  - [ ] Lichess connection: connected username, last synced, connect/disconnect button
+  - [ ] Account: change password, delete account
 
-- [ ] Chat UI in web (`/chat` route):
-  - [ ] Chat session list (sidebar or tabs)
-  - [ ] Message thread (user + assistant messages)
-  - [ ] Input form with send button
+## Phase 8: RAG Chat (Coach)
+
+Feature module: `$lib/features/coach/`. Route: `/dashboard/coach`.
+
+- [ ] Coach page (`/dashboard/coach`)
+  - [ ] Session list (left sub-panel or tabs)
+  - [ ] Chat thread: user + assistant messages, markdown rendering
+  - [ ] Input bar with send button
+  - [ ] Suggested prompts: "What are my biggest weaknesses?", "How can I improve my endgame?", "Analyze my opening repertoire"
+  - [ ] Context indicator: shows what data the coach sees (last N games, metrics summary)
   - [ ] Streaming response display
-- [ ] API endpoint (`POST /chat`):
-  - [ ] Accept user message + session_id
-  - [ ] Retrieve structured context from PostgreSQL:
+- [ ] API integration (routes defined in Phase 4):
+  - [ ] On message send, retrieve structured context from PostgreSQL:
     - [ ] Recent N games with metrics
-    - [ ] Top blunders / worst games
+    - [ ] Top blunders / worst games (from move_evaluations)
     - [ ] Opening frequency stats
     - [ ] Trend aggregates (improvement/decline)
+    - [ ] If game_id linked: full game metrics + move evaluations for that game
   - [ ] Build context payload (structured JSON)
   - [ ] Call Vertex AI Gemini 2.5 Flash with system prompt + context + user question
   - [ ] System prompt: chess coach persona, reference metrics, give actionable advice
@@ -218,10 +280,27 @@
 
 ## Phase 10: Testing
 
-- [ ] API integration tests (Vitest + supertest)
-- [ ] Worker unit tests (pytest — Stockfish analysis pipeline)
-- [ ] Auth flow E2E test (register → login → session validation)
-- [ ] Sync service tests (mock Lichess API responses)
+Tests colocated with features: `features/[name]/__tests__/[name].test.ts`
+
+- [ ] API integration tests (Vitest + supertest):
+  - [ ] `games.test.ts` — list, detail, filters, pagination, move evaluations
+  - [ ] `metrics.test.ts` — summary aggregates, trends time-series
+  - [ ] `coach.test.ts` — session CRUD, message send/receive
+  - [ ] `profile.test.ts` — get/update profile, lichess connect/disconnect
+  - [ ] `analysis.test.ts` — enqueue job, poll status
+  - [ ] `auth.test.ts` — middleware rejects invalid tokens, forwards valid sessions
+- [ ] Sync service tests (Vitest):
+  - [ ] `lichess-client.test.ts` — NDJSON parsing, rate limit handling (mocked HTTP)
+  - [ ] `mapper.test.ts` — Lichess API response → DB schema mapping
+  - [ ] `sync-service.test.ts` — delta sync logic, idempotent upserts (mocked Prisma)
+- [ ] Worker unit tests (pytest):
+  - [ ] `test_analysis.py` — Stockfish eval pipeline, centipawn loss calculation
+  - [ ] `test_classification.py` — move classification thresholds (blunder/mistake/inaccuracy)
+  - [ ] `test_accuracy.py` — overall accuracy formula
+  - [ ] `test_phase_detection.py` — opening/middlegame/endgame boundary detection
+- [ ] Web E2E tests (Vitest + Playwright):
+  - [ ] Auth flow: register → login → session validation → dashboard redirect
+  - [ ] Dashboard: sidebar navigation, page rendering
 
 ## Phase 11: Polish
 
@@ -259,4 +338,8 @@
 
 - [x] **Shared `packages/db`** — single Prisma schema consumed by both `web` and `api`
 - [x] **Coolify** — self-hosted PaaS for VPS (Postgres, worker), reverse proxy + SSL
-- [x] **Feature-based frontend** — `lib/features/[name]/` with two-level barrel exports, thin route files
+- [x] **Feature-based structure** — `features/[name]/` with barrel exports, both frontend and backend
+- [x] **Vitest over Jest** — native ESM, faster (Vite pipeline), same API, consistent across all TS services
+- [x] **supertest** — HTTP assertion lib for Express integration tests (pairs with Vitest, not a replacement)
+- [x] **pytest** — Python standard for worker tests (Stockfish pipeline)
+- [x] **Zod** — runtime validation for all API request/response schemas (TypeScript-native, pairs with Prisma)

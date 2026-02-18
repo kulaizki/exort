@@ -3,8 +3,9 @@
 	"private": true,
 	"type": "module",
 	"scripts": {
-		"dev": "concurrently -n web -c cyan \"pnpm dev:web\"",
+		"dev": "concurrently -n web,api -c cyan,green \"pnpm dev:web\" \"pnpm dev:api\"",
 		"dev:web": "pnpm -F @exort/web dev",
+		"dev:api": "pnpm -F @exort/api dev",
 		"build": "pnpm -F @exort/web build",
 		"check": "pnpm -F @exort/web check",
 		"lint": "pnpm -F @exort/web lint",

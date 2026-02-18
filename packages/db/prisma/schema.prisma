@@ -1,0 +1,226 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─── Better Auth ───────────────────────────────────────────
+
+model User {
+  id            String    @id @default(cuid())
+  name          String
+  email         String    @unique
+  emailVerified Boolean   @default(false)
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  sessions       Session[]
+  accounts       Account[]
+  lichessAccount LichessAccount?
+  games          Game[]
+  chatSessions   ChatSession[]
+
+  @@map("user")
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  expiresAt DateTime
+  token     String   @unique
+  ipAddress String?
+  userAgent String?
+  userId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id @default(cuid())
+  accountId             String
+  providerId            String
+  userId                String
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("account")
+}
+
+model Verification {
+  id         String    @id @default(cuid())
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime? @default(now())
+  updatedAt  DateTime? @updatedAt
+
+  @@map("verification")
+}
+
+// ─── Lichess ───────────────────────────────────────────────
+
+model LichessAccount {
+  id              String    @id @default(cuid())
+  userId          String    @unique
+  lichessUsername String
+  lastSyncedAt    DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("lichess_account")
+}
+
+// ─── Games ─────────────────────────────────────────────────
+
+model Game {
+  id             String   @id @default(cuid())
+  lichessGameId  String   @unique
+  userId         String
+  pgn            String
+  timeControl    String
+  result         String
+  playedAt       DateTime
+  opponent       String
+  color          String
+  rated          Boolean  @default(true)
+  variant        String   @default("standard")
+  clockInitial   Int?
+  clockIncrement Int?
+  playerRating   Int?
+  opponentRating Int?
+  status         String
+  createdAt      DateTime @default(now())
+
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  analysisJob     AnalysisJob?
+  metrics         GameMetric?
+  moveEvaluations MoveEvaluation[]
+
+  @@index([userId])
+  @@index([playedAt])
+  @@index([timeControl])
+  @@map("game")
+}
+
+// ─── Analysis ──────────────────────────────────────────────
+
+enum AnalysisStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+model AnalysisJob {
+  id          String         @id @default(cuid())
+  gameId      String         @unique
+  status      AnalysisStatus @default(PENDING)
+  createdAt   DateTime       @default(now())
+  startedAt   DateTime?
+  completedAt DateTime?
+
+  game Game @relation(fields: [gameId], references: [id], onDelete: Cascade)
+
+  @@index([status])
+  @@map("analysis_job")
+}
+
+// ─── Metrics ───────────────────────────────────────────────
+
+model GameMetric {
+  id              String  @id @default(cuid())
+  gameId          String  @unique
+  centipawnLoss   Float
+  accuracy        Float
+  blunderCount    Int     @default(0)
+  mistakeCount    Int     @default(0)
+  inaccuracyCount Int     @default(0)
+  openingName     String?
+  openingEco      String?
+  phaseErrors     Json?
+
+  game Game @relation(fields: [gameId], references: [id], onDelete: Cascade)
+
+  @@map("game_metric")
+}
+
+// ─── Move Evaluations ──────────────────────────────────────
+
+enum MoveClassification {
+  BRILLIANT
+  EXCELLENT
+  GOOD
+  INACCURACY
+  MISTAKE
+  BLUNDER
+}
+
+model MoveEvaluation {
+  id            String             @id @default(cuid())
+  gameId        String
+  moveNumber    Int
+  color         String
+  evalCp        Int
+  bestMoveUci   String?
+  playedMoveUci String
+  classification MoveClassification
+
+  game Game @relation(fields: [gameId], references: [id], onDelete: Cascade)
+
+  @@index([gameId])
+  @@unique([gameId, moveNumber, color])
+  @@map("move_evaluation")
+}
+
+// ─── Chat / Coach ──────────────────────────────────────────
+
+model ChatSession {
+  id        String   @id @default(cuid())
+  userId    String
+  title     String?
+  gameId    String?
+  createdAt DateTime @default(now())
+
+  user     User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages ChatMessage[]
+
+  @@index([userId])
+  @@map("chat_session")
+}
+
+enum ChatRole {
+  USER
+  ASSISTANT
+}
+
+model ChatMessage {
+  id        String   @id @default(cuid())
+  sessionId String
+  role      ChatRole
+  content   String
+  context   Json?
+  createdAt DateTime @default(now())
+
+  session ChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId])
+  @@map("chat_message")
+}
