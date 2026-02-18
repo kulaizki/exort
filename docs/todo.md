@@ -79,9 +79,9 @@
   - [x] Add Lichess as custom OAuth provider in Better Auth (genericOAuth plugin)
   - [x] Auto-link Lichess username on OAuth login (no manual entry needed)
   - [ ] Store in `lichess_accounts` table (needs post-OAuth hook)
-- [ ] Session management (hooks.server.ts guard)
-- [ ] Dashboard layout (sidebar, auth guard)
-- [ ] Profile page (user info, connected Lichess account)
+- [x] Session management (hooks.server.ts guard)
+- [x] Dashboard layout (sidebar, auth guard)
+- [x] Profile page (user info, connected Lichess account)
 
 ## Phase 4: API Service (Express) ✅
 
@@ -129,112 +129,113 @@
 - [x] Dockerfile for Cloud Run
 - [x] Add `dev:api` script to root `package.json` + concurrently
 
-## Phase 5: Lichess Sync Service
+## Phase 5: Lichess Sync Service ✅
 
-- [ ] Scaffold `apps/sync/` (Node.js + TypeScript)
-  - [ ] `package.json` as `@exort/sync`
-  - [ ] `src/lichess/client.ts` — Lichess API client (NDJSON streaming)
-  - [ ] `src/lichess/parser.ts` — parse NDJSON → typed game objects
-  - [ ] `src/lichess/types.ts` — Lichess API response types
-  - [ ] `src/sync/service.ts` — delta sync orchestration
-  - [ ] `src/sync/mapper.ts` — map Lichess API data → DB schema fields
-  - [ ] `src/jobs/enqueue.ts` — enqueue analysis jobs for new games
-- [ ] Delta sync logic:
-  - [ ] Fetch games since `last_synced_at` from `https://lichess.org/api/games/user/{username}`
-  - [ ] Parse NDJSON stream, extract all fields (opponent, color, rated, variant, clock, ratings, status, PGN)
-  - [ ] Idempotent upsert games (ON CONFLICT lichess_game_id DO NOTHING)
-  - [ ] Update `last_synced_at` in `lichess_accounts`
-- [ ] Rate limit handling (Lichess API: respect 429 + `X-RateLimit-*` headers)
-- [ ] Retry with exponential backoff
-- [ ] Enqueue analysis jobs for new games
-- [ ] Trigger mechanism:
-  - [ ] HTTP endpoint (called by API on user request)
+- [x] Scaffold `apps/sync/` (Node.js + TypeScript)
+  - [x] `package.json` as `@exort/sync`
+  - [x] `src/lichess/client.ts` — Lichess API client (NDJSON streaming)
+  - [x] `src/lichess/parser.ts` — parse NDJSON → typed game objects
+  - [x] `src/lichess/types.ts` — Lichess API response types
+  - [x] `src/sync/service.ts` — delta sync orchestration
+  - [x] `src/sync/mapper.ts` — map Lichess API data → DB schema fields
+  - [x] `src/jobs/enqueue.ts` — enqueue analysis jobs for new games
+- [x] Delta sync logic:
+  - [x] Fetch games since `last_synced_at` from `https://lichess.org/api/games/user/{username}`
+  - [x] Parse NDJSON stream, extract all fields (opponent, color, rated, variant, clock, ratings, status, PGN)
+  - [x] Idempotent upsert games (ON CONFLICT lichess_game_id DO NOTHING)
+  - [x] Update `last_synced_at` in `lichess_accounts`
+- [x] Rate limit handling (Lichess API: respect 429 + `X-RateLimit-*` headers)
+- [x] Retry with exponential backoff
+- [x] Enqueue analysis jobs for new games
+- [x] Trigger mechanism:
+  - [x] HTTP endpoint (called by API on user request)
   - [ ] Optional: Cloud Scheduler cron (periodic sync for all users)
-- [ ] Dockerfile for Cloud Run
-- [ ] Add `dev:sync` script to root + concurrently
+- [x] Dockerfile for Cloud Run
+- [x] Add `dev:sync` script to root + concurrently
 
-## Phase 6: Stockfish Worker
+## Phase 6: Stockfish Worker ✅
 
-- [ ] Scaffold `apps/worker/` (Python)
-  - [ ] `requirements.txt` (chess, stockfish wrapper, psycopg2/asyncpg)
-  - [ ] Job queue consumer (PgQueuer or Procrastinate)
-- [ ] Job queue contract: shared `analysis_jobs` table used by Node.js (INSERT) and Python (consume)
-- [ ] Stockfish 18 integration:
-  - [ ] Download/bundle Stockfish 18 binary in Docker image
-  - [ ] Configure analysis depth (depth 20 recommended)
-  - [ ] Time limit per game (prevent runaway analysis)
-- [ ] Analysis pipeline per game:
-  - [ ] Parse PGN using `chess` library
-  - [ ] Run Stockfish evaluation on each move
-  - [ ] Compute centipawn loss per move
-  - [ ] Classify each move: blunder (>200cp), mistake (>100cp), inaccuracy (>50cp), good, excellent, brilliant
-  - [ ] Store per-move data in `move_evaluations` (eval_cp, best_move_uci, played_move_uci, classification)
-  - [ ] Aggregate into `game_metrics`: accuracy, centipawn_loss, blunder/mistake/inaccuracy counts
-  - [ ] Estimate overall accuracy (lichess-style formula)
-  - [ ] Classify opening (ECO code + name from PGN headers or lookup)
-  - [ ] Detect phase-based errors (opening/middlegame/endgame)
-- [ ] Write `game_metrics` + `move_evaluations` to PostgreSQL
-- [ ] Update `analysis_jobs` status (processing → completed / failed)
-- [ ] Dockerfile with:
-  - [ ] Stockfish 18 binary
-  - [ ] CPU quota limits (`--cpus=1`)
-  - [ ] Health check endpoint
-- [ ] Concurrency control (process 1-2 games at a time)
+- [x] Scaffold `apps/worker/` (Python)
+  - [x] `requirements.txt` (chess, stockfish wrapper, psycopg2)
+  - [x] Poll-based job consumer (FOR UPDATE SKIP LOCKED)
+- [x] Job queue contract: shared `analysis_jobs` table used by Node.js (INSERT) and Python (consume)
+- [x] Stockfish 18 integration:
+  - [x] Download/bundle Stockfish 18 binary in Docker image
+  - [x] Configure analysis depth (depth 20 recommended)
+  - [x] Time limit per game (prevent runaway analysis)
+- [x] Analysis pipeline per game:
+  - [x] Parse PGN using `chess` library
+  - [x] Run Stockfish evaluation on each move
+  - [x] Compute centipawn loss per move
+  - [x] Classify each move: blunder (>300cp), mistake (>100cp), inaccuracy (>50cp), good, excellent, brilliant
+  - [x] Store per-move data in `move_evaluations` (eval_cp, best_move_uci, played_move_uci, classification)
+  - [x] Aggregate into `game_metrics`: accuracy, centipawn_loss, blunder/mistake/inaccuracy counts
+  - [x] Estimate overall accuracy (lichess-style formula)
+  - [x] Classify opening (ECO code + name from PGN headers or lookup)
+  - [x] Detect phase-based errors (opening/middlegame/endgame)
+- [x] Write `game_metrics` + `move_evaluations` to PostgreSQL
+- [x] Update `analysis_jobs` status (processing → completed / failed)
+- [x] Dockerfile with:
+  - [x] Stockfish 18 binary
+  - [x] CPU quota limits (`--cpus=1`)
+  - [x] Health check endpoint
+- [x] Concurrency control (process 1-2 games at a time)
 
-## Phase 7: Dashboard UI (Web)
+## Phase 7: Dashboard UI (Web) ✅
 
 Layout: collapsible sidebar + main content area. Feature module: `$lib/features/dashboard/`.
 Sidebar order: Dashboard, Games, Insights, Coach — Settings at bottom.
 
-- [ ] Dashboard layout (`/dashboard`)
-  - [ ] Collapsible sidebar (icon-only on collapse, dark bg)
-  - [ ] Auth guard (redirect to `/login` if unauthenticated)
-  - [ ] `+layout.svelte` with sidebar + `<slot />` content area
-  - [ ] Active route highlighting in sidebar
-  - [ ] User avatar / name at bottom of sidebar
-  - [ ] Mobile: hamburger toggle, slide-in sidebar overlay
-- [ ] Dashboard overview (`/dashboard` — index page)
-  - [ ] Stat cards: total games synced, average accuracy, blunder rate, games this week
+- [x] Dashboard layout (`/dashboard`)
+  - [x] Collapsible sidebar (icon-only on collapse, dark bg)
+  - [x] Auth guard (redirect to `/login` if unauthenticated)
+  - [x] `+layout.svelte` with sidebar + `<slot />` content area
+  - [x] Active route highlighting in sidebar
+  - [x] User avatar / name at bottom of sidebar
+  - [x] Mobile: hamburger toggle, slide-in sidebar overlay
+- [x] Dashboard overview (`/dashboard` — index page)
+  - [x] Stat cards: total games synced, average accuracy, blunder rate, games this week
   - [ ] Accuracy trend sparkline (last 30 days)
-  - [ ] Recent games list (5 most recent — result, accuracy, opening, click to detail)
+  - [x] Recent games list (5 most recent — result, accuracy, opening, click to detail)
   - [ ] Pending analysis count
-  - [ ] Quick actions: "Sync games" button, "Ask coach" shortcut
-- [ ] Games page (`/dashboard/games`)
-  - [ ] Table view: date, opponent, result (W/D/L badge), time control, opening, accuracy, analysis status
-  - [ ] Filters: time control, result, date range, opening
-  - [ ] Sort: by date, accuracy, blunder count
-  - [ ] "Sync new games from Lichess" button
-  - [ ] Click row → game detail
+  - [x] Quick actions: "Sync games" button, "Ask coach" shortcut
+- [x] Games page (`/dashboard/games`)
+  - [x] Table view: date, opponent, result (W/D/L badge), time control, opening, accuracy, analysis status
+  - [x] Filters: time control, result, date range, opening
+  - [x] Sort: by date, accuracy, blunder count
+  - [x] "Sync new games from Lichess" button
+  - [x] Click row → game detail
   - [ ] Loading skeletons
-- [ ] Game detail page (`/dashboard/games/[id]`)
-  - [ ] Header: opponent, result, time control, date, opening (ECO + name)
-  - [ ] Metrics panel: accuracy %, centipawn loss, blunders/mistakes/inaccuracies counts
-  - [ ] Phase breakdown: opening/middlegame/endgame error counts (from phase_errors JSONB)
-  - [ ] Move list with per-move eval bar (stretch goal)
-  - [ ] "Ask coach about this game" button → opens chat with game context
-- [ ] Insights page (`/dashboard/insights`)
-  - [ ] Accuracy over time line chart (weekly/monthly toggle)
-  - [ ] Blunder rate trend line chart
-  - [ ] Opening breakdown: bar/pie chart of most played openings with win rate
-  - [ ] Time control comparison: accuracy by bullet/blitz/rapid/classical
-  - [ ] Weakness summary: auto-derived text ("You blunder most in the endgame", etc.)
-- [ ] Settings page (`/dashboard/settings`)
-  - [ ] Profile: name, email (editable)
-  - [ ] Lichess connection: connected username, last synced, connect/disconnect button
-  - [ ] Account: change password, delete account
+- [x] Game detail page (`/dashboard/games/[id]`)
+  - [x] Header: opponent, result, time control, date, opening (ECO + name)
+  - [x] Metrics panel: accuracy %, centipawn loss, blunders/mistakes/inaccuracies counts
+  - [x] Phase breakdown: opening/middlegame/endgame error counts (from phase_errors JSONB)
+  - [x] Move list with per-move eval bar (stretch goal)
+  - [x] "Ask coach about this game" button → opens chat with game context
+- [x] Insights page (`/dashboard/insights`)
+  - [x] Accuracy over time line chart (weekly/monthly toggle)
+  - [x] Blunder rate trend line chart
+  - [x] Opening breakdown: bar/pie chart of most played openings with win rate
+  - [x] Time control comparison: accuracy by bullet/blitz/rapid/classical
+  - [x] Weakness summary: auto-derived text ("You blunder most in the endgame", etc.)
+- [x] Settings page (`/dashboard/settings`)
+  - [x] Profile: name, email (editable)
+  - [x] Lichess connection: connected username, last synced, connect/disconnect button
+  - [x] Account: change password, delete account
 
-## Phase 8: RAG Chat (Coach)
+## Phase 8: RAG Chat (Coach) ✅
 
 Feature module: `$lib/features/coach/`. Route: `/dashboard/coach`.
 
-- [ ] Coach page (`/dashboard/coach`)
-  - [ ] Session list (left sub-panel or tabs)
-  - [ ] Chat thread: user + assistant messages, markdown rendering
-  - [ ] Input bar with send button
-  - [ ] Suggested prompts: "What are my biggest weaknesses?", "How can I improve my endgame?", "Analyze my opening repertoire"
+- [x] Coach page (`/dashboard/coach`)
+  - [x] Session list (left sub-panel)
+  - [x] Chat thread: user + assistant messages
+  - [x] Input bar with send button
+  - [x] Suggested prompts: "What are my biggest weaknesses?", "How can I improve my endgame?", "Analyze my opening repertoire"
   - [ ] Context indicator: shows what data the coach sees (last N games, metrics summary)
-  - [ ] Streaming response display
-- [ ] API integration (routes defined in Phase 4):
+  - [ ] Streaming response display (currently non-streaming)
+  - [ ] Markdown rendering in assistant messages
+- [ ] API integration (routes defined in Phase 4, service logic pending):
   - [ ] On message send, retrieve structured context from PostgreSQL:
     - [ ] Recent N games with metrics
     - [ ] Top blunders / worst games (from move_evaluations)
