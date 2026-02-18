@@ -4,9 +4,10 @@ import { genericOAuth } from 'better-auth/plugins';
 import { sveltekitCookies } from 'better-auth/svelte-kit';
 import { env } from '$env/dynamic/private';
 import { getRequestEvent } from '$app/server';
+import { building } from '$app/environment';
 import { prisma } from '$lib/server/prisma';
 
-export const auth = betterAuth({
+export const auth = building ? (null as unknown as ReturnType<typeof betterAuth>) : betterAuth({
 	baseURL: env.ORIGIN,
 	secret: env.BETTER_AUTH_SECRET,
 	database: prismaAdapter(prisma, { provider: 'postgresql' }),
