@@ -13,13 +13,13 @@
 
 	const navItems = [
 		{ href: '/dashboard', label: 'Dashboard', icon: 'dashboard' },
-		{ href: '/dashboard/games', label: 'Games', icon: 'games' },
-		{ href: '/dashboard/insights', label: 'Insights', icon: 'insights' },
-		{ href: '/dashboard/coach', label: 'Coach', icon: 'coach' }
+		{ href: '/games', label: 'Games', icon: 'games' },
+		{ href: '/insights', label: 'Insights', icon: 'insights' },
+		{ href: '/coach', label: 'Coach', icon: 'coach' }
 	];
 
 	const bottomItems = [
-		{ href: '/dashboard/settings', label: 'Settings', icon: 'settings' }
+		{ href: '/settings', label: 'Settings', icon: 'settings' }
 	];
 
 	function isActive(href: string): boolean {

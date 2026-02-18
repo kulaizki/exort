@@ -50,7 +50,7 @@
 	<title>games — exort</title>
 </svelte:head>
 
-<div class="space-y-4">
+<div class="space-y-6">
 	<div class="flex items-center justify-between">
 		<div>
 			<h1 class="text-lg font-semibold text-neutral-200">Games</h1>
@@ -140,7 +140,7 @@
 					{#each data.games as game}
 						<tr
 							class="cursor-pointer bg-neutral-900/50 transition-colors hover:bg-neutral-800/50"
-							onclick={() => goto(`/dashboard/games/${game.id}`)}
+							onclick={() => goto(`/games/${game.id}`)}
 						>
 							<td class="px-4 py-2.5">
 								<span class="inline-flex h-6 w-6 items-center justify-center rounded-sm text-xs font-bold
@@ -203,7 +203,7 @@
 			title="No games found"
 			description="Sync your Lichess games to see them here."
 			actionLabel="Go to Settings"
-			actionHref="/dashboard/settings"
+			actionHref="/settings"
 		/>
 	{/if}
 </div>

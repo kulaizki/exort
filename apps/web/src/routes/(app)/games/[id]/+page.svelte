@@ -17,7 +17,7 @@
 
 <div class="space-y-6">
 	<!-- Back link -->
-	<a href="/dashboard/games" class="inline-flex items-center gap-1.5 text-sm text-neutral-400 transition-colors hover:text-neutral-200">
+	<a href="/games" class="inline-flex items-center gap-1.5 text-sm text-neutral-400 transition-colors hover:text-neutral-200">
 		<svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>
 		Back to games
 	</a>
@@ -161,7 +161,7 @@
 
 	<!-- Coach CTA -->
 	<a
-		href="/dashboard/coach"
+		href="/coach"
 		class="inline-flex items-center gap-2 rounded-sm border border-gold/30 bg-gold/10 px-4 py-2.5 text-sm font-medium text-gold transition-colors hover:bg-gold/20"
 	>
 		<svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>

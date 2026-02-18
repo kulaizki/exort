@@ -116,7 +116,7 @@
 			title="No insights yet"
 			description="Sync and analyze your Lichess games to unlock insights about your play."
 			actionLabel="Go to Settings"
-			actionHref="/dashboard/settings"
+			actionHref="/settings"
 		/>
 	{/if}
 </div>

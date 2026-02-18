@@ -49,14 +49,14 @@
 		<div class="mb-3 flex items-center justify-between">
 			<h2 class="text-sm font-medium text-neutral-300">Recent Games</h2>
 			{#if data.totalGames > 0}
-				<a href="/dashboard/games" class="text-xs text-gold transition-colors hover:text-gold-light">View all</a>
+				<a href="/games" class="text-xs text-gold transition-colors hover:text-gold-light">View all</a>
 			{/if}
 		</div>
 
 		{#if data.recentGames.length > 0}
 			<div class="divide-y divide-neutral-800 rounded-sm border border-neutral-800 bg-neutral-900">
 				{#each data.recentGames as game}
-					<a href="/dashboard/games/{game.id}" class="flex items-center justify-between px-4 py-3 transition-colors hover:bg-neutral-800/50">
+					<a href="/games/{game.id}" class="flex items-center justify-between px-4 py-3 transition-colors hover:bg-neutral-800/50">
 						<div class="min-w-0 flex-1">
 							<div class="flex items-center gap-2">
 								<span class="inline-flex h-5 w-5 items-center justify-center rounded-sm text-xs font-bold
@@ -85,18 +85,18 @@
 				title="No games yet"
 				description="Connect your Lichess account and sync your games to get started."
 				actionLabel="Go to Settings"
-				actionHref="/dashboard/settings"
+				actionHref="/settings"
 			/>
 		{/if}
 	</div>
 
 	<!-- Quick actions -->
 	<div class="flex flex-wrap gap-3">
-		<a href="/dashboard/coach" class="inline-flex items-center gap-2 rounded-sm border border-neutral-700 bg-neutral-800 px-4 py-2 text-sm font-medium text-neutral-200 transition-colors hover:bg-neutral-700">
+		<a href="/coach" class="inline-flex items-center gap-2 rounded-sm border border-neutral-700 bg-neutral-800 px-4 py-2 text-sm font-medium text-neutral-200 transition-colors hover:bg-neutral-700">
 			<svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
 			Ask Coach
 		</a>
-		<a href="/dashboard/insights" class="inline-flex items-center gap-2 rounded-sm border border-neutral-700 bg-neutral-800 px-4 py-2 text-sm font-medium text-neutral-200 transition-colors hover:bg-neutral-700">
+		<a href="/insights" class="inline-flex items-center gap-2 rounded-sm border border-neutral-700 bg-neutral-800 px-4 py-2 text-sm font-medium text-neutral-200 transition-colors hover:bg-neutral-700">
 			<svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg>
 			View Insights
 		</a>

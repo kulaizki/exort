@@ -91,7 +91,7 @@
 		{:else}
 			<p class="mb-3 text-sm text-neutral-400">Connect your Lichess account to sync games and get coaching insights.</p>
 			<button
-				onclick={() => authClient.signIn.oauth2({ providerId: 'lichess', callbackURL: '/dashboard/settings' })}
+				onclick={() => authClient.signIn.oauth2({ providerId: 'lichess', callbackURL: '/settings' })}
 				class="inline-flex cursor-pointer items-center gap-2 rounded-sm bg-neutral-800 px-4 py-2 text-sm font-medium text-neutral-200 transition-colors hover:bg-neutral-700"
 			>
 				<svg class="h-4 w-4" viewBox="0 0 50 50" fill="currentColor">
@@ -106,7 +106,7 @@
 	<div class="rounded-sm border border-neutral-800 bg-neutral-900 p-5">
 		<h2 class="mb-4 text-sm font-medium text-neutral-300">Account</h2>
 		<div class="flex flex-wrap gap-3">
-			<a href="/dashboard/settings" class="rounded-sm border border-neutral-700 px-4 py-2 text-sm font-medium text-neutral-200 transition-colors hover:bg-neutral-800">
+			<a href="/settings" class="rounded-sm border border-neutral-700 px-4 py-2 text-sm font-medium text-neutral-200 transition-colors hover:bg-neutral-800">
 				Change Password
 			</a>
 			<button class="cursor-pointer rounded-sm border border-red-500/30 px-4 py-2 text-sm font-medium text-red-400 transition-colors hover:bg-red-500/10">
