@@ -151,7 +151,7 @@
 				<span class="text-sm text-neutral-300">
 					Analyzing {activeJobTotal} game{activeJobTotal === 1 ? '' : 's'}
 					<span class="text-neutral-500">
-						({#if processingCount > 0}{processingCount} processing{/if}{#if processingCount > 0 && pendingCount > 0}, {/if}{#if pendingCount > 0}{pendingCount} pending{/if})
+						({#if processingCount > 0}{processingCount} processing{/if}{#if processingCount > 0 && pendingCount > 0},{' '}{/if}{#if pendingCount > 0}{pendingCount} pending{/if})
 					</span>
 				</span>
 			</div>
