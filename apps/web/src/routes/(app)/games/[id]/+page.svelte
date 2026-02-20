@@ -132,7 +132,7 @@
 							</tr>
 						</thead>
 						<tbody class="divide-y divide-neutral-800/50">
-							{#each game.moveEvaluations as move (move.moveNumber)}
+							{#each game.moveEvaluations as move (move.id)}
 								<tr class="bg-neutral-900/50">
 									<td class="px-3 py-1.5 text-neutral-400">{move.moveNumber}</td>
 									<td class="px-3 py-1.5 capitalize text-neutral-400">{move.color}</td>

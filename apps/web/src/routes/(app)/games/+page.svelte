@@ -7,9 +7,9 @@
 	let { data, form } = $props();
 	let syncing = $state(false);
 	let analyzing = $state(false);
+	let selectMode = $state(false);
 	let selected = $state<Set<string>>(new Set());
-	const allOnPage = $derived(data.games.map((g: { id: string }) => g.id));
-	const allSelected = $derived(allOnPage.length > 0 && allOnPage.every((id: string) => selected.has(id)));
+	const unanalyzedOnPage = $derived(data.games.filter((g: { id: string; metrics: unknown }) => !g.metrics).map((g: { id: string }) => g.id));
 	const unanalyzedSelected = $derived([...selected].filter((id) => {
 		const game = data.games.find((g: { id: string }) => g.id === id);
 		return game && !game.metrics;
@@ -22,12 +22,13 @@
 		selected = next;
 	}
 
-	function toggleAll() {
-		if (allSelected) {
-			selected = new Set();
-		} else {
-			selected = new Set(allOnPage);
-		}
+	function selectAllUnanalyzed() {
+		selected = new Set(unanalyzedOnPage);
+	}
+
+	function exitSelectMode() {
+		selectMode = false;
+		selected = new Set();
 	}
 
 	function applyFilter(key: string, value: string) {
@@ -79,23 +80,34 @@
 			<h1 class="text-lg font-semibold text-neutral-200">Games</h1>
 			<p class="mt-1 text-sm text-neutral-500">{data.total} games synced</p>
 		</div>
-		<form method="post" action="?/sync" use:enhance={() => {
-			syncing = true;
-			return async ({ update }) => {
-				await update();
-				syncing = false;
-				await invalidateAll();
-			};
-		}}>
-			<button
-				type="submit"
-				disabled={syncing}
-				class="inline-flex cursor-pointer items-center gap-2 rounded-sm bg-gold px-3 py-1.5 text-xs font-semibold text-neutral-950 transition-colors hover:bg-gold-light disabled:cursor-not-allowed disabled:opacity-50"
-			>
-				<svg class="h-3.5 w-3.5 {syncing ? 'animate-spin' : ''}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg>
-				{syncing ? 'Syncing...' : 'Sync Games'}
-			</button>
-		</form>
+		<div class="flex items-center gap-2">
+			{#if !selectMode && data.games.length > 0 && unanalyzedOnPage.length > 0}
+				<button
+					onclick={() => selectMode = true}
+					class="inline-flex cursor-pointer items-center gap-2 rounded-sm border border-neutral-700 bg-neutral-800 px-3 py-1.5 text-xs font-medium text-neutral-200 transition-colors hover:bg-neutral-700"
+				>
+					<svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m16 12-4-4-4 4"/><path d="M12 16V8"/></svg>
+					Batch Analyze
+				</button>
+			{/if}
+			<form method="post" action="?/sync" use:enhance={() => {
+				syncing = true;
+				return async ({ update }) => {
+					await update();
+					syncing = false;
+					await invalidateAll();
+				};
+			}}>
+				<button
+					type="submit"
+					disabled={syncing}
+					class="inline-flex cursor-pointer items-center gap-2 rounded-sm bg-gold px-3 py-1.5 text-xs font-semibold text-neutral-950 transition-colors hover:bg-gold-light disabled:cursor-not-allowed disabled:opacity-50"
+				>
+					<svg class="h-3.5 w-3.5 {syncing ? 'animate-spin' : ''}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg>
+					{syncing ? 'Syncing...' : 'Sync Games'}
+				</button>
+			</form>
+		</div>
 	</div>
 
 	{#if form?.synced}
@@ -119,6 +131,55 @@
 	{#if form?.analyzeError}
 		<div class="rounded-sm border border-red-500/20 bg-red-500/10 px-4 py-2.5 text-sm text-red-400">
 			{form.analyzeError}
+		</div>
+	{/if}
+
+	<!-- Selection mode bar -->
+	{#if selectMode}
+		<div class="flex items-center justify-between rounded-sm border border-gold/20 bg-gold/5 px-4 py-2.5">
+			<div class="flex items-center gap-3">
+				<span class="text-sm text-neutral-300">
+					{selected.size > 0 ? `${selected.size} selected` : 'Select games to analyze'}
+				</span>
+				{#if unanalyzedOnPage.length > 0}
+					<button
+						onclick={selectAllUnanalyzed}
+						class="cursor-pointer text-xs text-gold transition-colors hover:text-gold-light"
+					>
+						Select all unanalyzed ({unanalyzedOnPage.length})
+					</button>
+				{/if}
+			</div>
+			<div class="flex items-center gap-2">
+				<button
+					onclick={exitSelectMode}
+					class="cursor-pointer text-xs text-neutral-400 transition-colors hover:text-neutral-200"
+				>
+					Cancel
+				</button>
+				{#if unanalyzedSelected.length > 0}
+					<form method="post" action="?/analyze" use:enhance={() => {
+						analyzing = true;
+						return async ({ update }) => {
+							await update();
+							analyzing = false;
+							exitSelectMode();
+							await invalidateAll();
+						};
+					}}>
+						{#each unanalyzedSelected as id}
+							<input type="hidden" name="gameIds" value={id} />
+						{/each}
+						<button
+							type="submit"
+							disabled={analyzing}
+							class="inline-flex cursor-pointer items-center gap-1.5 rounded-sm bg-gold px-3 py-1.5 text-xs font-semibold text-neutral-950 transition-colors hover:bg-gold-light disabled:cursor-not-allowed disabled:opacity-50"
+						>
+							{analyzing ? 'Queuing...' : `Analyze ${unanalyzedSelected.length}`}
+						</button>
+					</form>
+				{/if}
+			</div>
 		</div>
 	{/if}
 
@@ -157,79 +218,46 @@
 		</select>
 	</div>
 
-	<!-- Selection bar -->
-	{#if selected.size > 0}
-		<div class="flex items-center justify-between rounded-sm border border-gold/20 bg-gold/5 px-4 py-2.5">
-			<span class="text-sm text-neutral-300">{selected.size} game{selected.size === 1 ? '' : 's'} selected</span>
-			<div class="flex items-center gap-2">
-				<button
-					onclick={() => selected = new Set()}
-					class="cursor-pointer text-xs text-neutral-400 transition-colors hover:text-neutral-200"
-				>
-					Clear
-				</button>
-				{#if unanalyzedSelected.length > 0}
-					<form method="post" action="?/analyze" use:enhance={() => {
-						analyzing = true;
-						return async ({ update }) => {
-							await update();
-							analyzing = false;
-							selected = new Set();
-							await invalidateAll();
-						};
-					}}>
-						{#each unanalyzedSelected as id}
-							<input type="hidden" name="gameIds" value={id} />
-						{/each}
-						<button
-							type="submit"
-							disabled={analyzing}
-							class="inline-flex cursor-pointer items-center gap-1.5 rounded-sm bg-gold px-3 py-1.5 text-xs font-semibold text-neutral-950 transition-colors hover:bg-gold-light disabled:cursor-not-allowed disabled:opacity-50"
-						>
-							{analyzing ? 'Queuing...' : `Analyze ${unanalyzedSelected.length} game${unanalyzedSelected.length === 1 ? '' : 's'}`}
-						</button>
-					</form>
-				{/if}
-			</div>
-		</div>
-	{/if}
-
 	<!-- Games table -->
 	{#if data.games.length > 0}
 		<div class="overflow-x-auto rounded-sm border border-neutral-800">
 			<table class="w-full text-sm">
 				<thead>
 					<tr class="border-b border-neutral-800 bg-neutral-900">
-						<th class="w-10 px-3 py-2.5">
-							<input
-								type="checkbox"
-								checked={allSelected}
-								onchange={toggleAll}
-								class="cursor-pointer accent-gold"
-							/>
-						</th>
+						{#if selectMode}
+							<th class="w-10 px-3 py-2.5"></th>
+						{/if}
 						<th class="px-4 py-2.5 text-left text-xs font-medium text-neutral-500">Result</th>
 						<th class="px-4 py-2.5 text-left text-xs font-medium text-neutral-500">Opponent</th>
 						<th class="hidden px-4 py-2.5 text-left text-xs font-medium text-neutral-500 sm:table-cell">Time Control</th>
 						<th class="hidden px-4 py-2.5 text-left text-xs font-medium text-neutral-500 md:table-cell">Opening</th>
 						<th class="px-4 py-2.5 text-right text-xs font-medium text-neutral-500">Accuracy</th>
-						<th class="hidden px-4 py-2.5 text-right text-xs font-medium text-neutral-500 sm:table-cell">Date</th>
+						<th class="hidden whitespace-nowrap px-4 py-2.5 text-right text-xs font-medium text-neutral-500 sm:table-cell">Date</th>
 					</tr>
 				</thead>
 				<tbody class="divide-y divide-neutral-800">
 					{#each data.games as game}
 						<tr
-							class="cursor-pointer bg-neutral-900/50 transition-colors hover:bg-neutral-800/50"
-							onclick={() => goto(`/games/${game.id}`)}
+							class="cursor-pointer bg-neutral-900/50 transition-colors hover:bg-neutral-800/50 {selectMode && selected.has(game.id) ? 'bg-gold/5' : ''}"
+							onclick={() => {
+								if (selectMode) {
+									toggleGame(game.id);
+								} else {
+									goto(`/games/${game.id}`);
+								}
+							}}
 						>
-							<td class="px-3 py-2.5" onclick={(e) => e.stopPropagation()}>
-								<input
-									type="checkbox"
-									checked={selected.has(game.id)}
-									onchange={() => toggleGame(game.id)}
-									class="cursor-pointer accent-gold"
-								/>
-							</td>
+							{#if selectMode}
+								<td class="px-3 py-2.5">
+									<input
+										type="checkbox"
+										checked={selected.has(game.id)}
+										onchange={() => toggleGame(game.id)}
+										onclick={(e) => e.stopPropagation()}
+										class="cursor-pointer accent-gold"
+									/>
+								</td>
+							{/if}
 							<td class="px-4 py-2.5">
 								<span class="inline-flex h-6 w-6 items-center justify-center rounded-sm text-xs font-bold
 									{game.result === 'win' ? 'bg-green-500/20 text-green-400' : game.result === 'loss' ? 'bg-red-500/20 text-red-400' : 'bg-neutral-700 text-neutral-400'}">
