@@ -52,6 +52,16 @@ def _cp_from_info(info: dict) -> int | None:
     return None
 
 
+def _cp_from_top(top: list[dict]) -> int | None:
+    if not top:
+        return None
+    entry = top[0]
+    mate = entry.get("Mate")
+    if mate is not None:
+        return 10000 if mate > 0 else -10000
+    return entry.get("Centipawn")
+
+
 def analyze_game(pgn: str, game_id: str) -> AnalysisResult:
     game = chess.pgn.read_game(io.StringIO(pgn))
     if game is None:
@@ -73,23 +83,21 @@ def analyze_game(pgn: str, game_id: str) -> AnalysisResult:
     total_plies = total_moves_node.ply()
     total_moves = (total_plies + 1) // 2
 
-    # Get initial position eval once; reuse "after" as next move's "before"
-    sf.set_fen_position(board.fen())
-    cached_eval = sf.get_evaluation()
-
     node = game
     while not node.is_end():
         next_node = node.variation(0)
         played_move = next_node.move
 
-        before_cp = _cp_from_info(cached_eval) or 0
-        best_move_result = sf.get_best_move()
+        sf.set_fen_position(board.fen())
+        top = sf.get_top_moves(1)
+        before_cp = _cp_from_top(top) or 0
+        best_move_result = top[0]["Move"] if top else None
 
         board.push(played_move)
 
         sf.set_fen_position(board.fen())
-        cached_eval = sf.get_evaluation()
-        after_cp = _cp_from_info(cached_eval) or 0
+        after_info = sf.get_evaluation()
+        after_cp = _cp_from_info(after_info) or 0
 
         ply = next_node.ply()
         move_number = (ply + 1) // 2
