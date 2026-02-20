@@ -73,22 +73,23 @@ def analyze_game(pgn: str, game_id: str) -> AnalysisResult:
     total_plies = total_moves_node.ply()
     total_moves = (total_plies + 1) // 2
 
+    # Get initial position eval once; reuse "after" as next move's "before"
+    sf.set_fen_position(board.fen())
+    cached_eval = sf.get_evaluation()
+
     node = game
     while not node.is_end():
         next_node = node.variation(0)
         played_move = next_node.move
 
-        sf.set_fen_position(board.fen())
-        before_info = sf.get_evaluation()
+        before_cp = _cp_from_info(cached_eval) or 0
         best_move_result = sf.get_best_move()
 
         board.push(played_move)
 
         sf.set_fen_position(board.fen())
-        after_info = sf.get_evaluation()
-
-        before_cp = _cp_from_info(before_info) or 0
-        after_cp = _cp_from_info(after_info) or 0
+        cached_eval = sf.get_evaluation()
+        after_cp = _cp_from_info(cached_eval) or 0
 
         ply = next_node.ply()
         move_number = (ply + 1) // 2
