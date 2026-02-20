@@ -113,7 +113,8 @@
   - [x] **Sync:**
     - [x] `POST /sync/trigger` — trigger Lichess sync for user
   - [x] **Analysis:**
-    - [x] `POST /analysis/enqueue` — enqueue analysis job for a game
+    - [x] `POST /analysis/enqueue` — enqueue analysis job for a single game
+    - [x] `POST /analysis/batch-enqueue` — enqueue analysis for multiple games (max 50)
     - [x] `GET /analysis/status/:jobId` — poll job status
   - [x] **Coach (Chat):**
     - [x] `POST /chat/sessions` — create new chat session (optional game_id for game-specific coaching)
@@ -146,7 +147,7 @@
   - [x] Update `last_synced_at` in `lichess_accounts`
 - [x] Rate limit handling (Lichess API: respect 429 + `X-RateLimit-*` headers)
 - [x] Retry with exponential backoff
-- [x] Enqueue analysis jobs for new games
+- [x] ~~Enqueue analysis jobs for new games~~ (removed — analysis is now on-demand via API)
 - [x] Trigger mechanism:
   - [x] HTTP endpoint (called by API on user request)
   - [ ] Optional: Cloud Scheduler cron (periodic sync for all users)
@@ -205,12 +206,15 @@ Sidebar order: Dashboard, Games, Insights, Coach, Settings. User info at bottom.
   - [x] Sort: by date, accuracy, blunder count
   - [x] "Sync new games from Lichess" button
   - [x] Click row → game detail
+  - [x] Checkbox selection with "Analyze" batch action (max 50 games)
+  - [x] Selection bar with count, clear, and analyze button
   - [ ] Loading skeletons
 - [x] Game detail page (`/games/[id]`)
   - [x] Header: opponent, result, time control, date, opening (ECO + name)
   - [x] Metrics panel: accuracy %, centipawn loss, blunders/mistakes/inaccuracies counts
   - [x] Phase breakdown: opening/middlegame/endgame error counts (from phase_errors JSONB)
   - [x] Move list with per-move eval bar (stretch goal)
+  - [x] "Analyze with Stockfish" button (on-demand, shown when not yet analyzed)
   - [x] "Ask coach about this game" button → opens chat with game context
 - [x] Insights page (`/insights`)
   - [x] Accuracy over time line chart (weekly/monthly toggle)
@@ -266,12 +270,12 @@ All services on Coolify VPS. Only Vertex AI on GCP.
   - [x] Domain: `exort.fitzsixto.com`
 - [x] Deploy `exort-api` on Coolify VPS:
   - [x] GitHub repo, Dockerfile build pack, base dir `/apps/api`
-  - [x] Environment variables (DATABASE_URL, VERTEX_AI config, CORS_ORIGIN)
+  - [x] Environment variables (DATABASE_URL, VERTEX_AI config, CORS_ORIGIN, SYNC_SERVICE_URL, SYNC_SECRET)
   - [x] Domain: `api.exort.fitzsixto.com`
 - [x] Deploy `exort-sync` on Coolify VPS:
   - [x] GitHub repo, Dockerfile build pack, base dir `/apps/sync`
-  - [x] Environment variables (DATABASE_URL)
-  - [x] No domain needed (triggered by API internally)
+  - [x] Environment variables (DATABASE_URL, SYNC_SECRET)
+  - [x] Domain: `sync.exort.fitzsixto.com` (shared-secret auth via `X-Sync-Secret` header)
 - [x] Coolify reverse proxy + SSL (wildcard `*.fitzsixto.com`)
 - [x] CI/CD: Coolify GitHub webhook auto-deploy on push to main
 - [ ] End-to-end smoke test on production
@@ -357,3 +361,5 @@ Key issues resolved during Coolify deployment:
 - [x] **supertest** — HTTP assertion lib for Express integration tests (pairs with Vitest, not a replacement)
 - [x] **pytest** — Python standard for worker tests (Stockfish pipeline)
 - [x] **Zod** — runtime validation for all API request/response schemas (TypeScript-native, pairs with Prisma)
+- [x] **Shared-secret auth for internal services** — API ↔ Sync communicate via `X-Sync-Secret` header, stable domain routing through Traefik
+- [x] **On-demand analysis** — user-triggered (single or batch max 50), not auto-enqueued on sync

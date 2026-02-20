@@ -66,7 +66,7 @@ src/
 │   │   └── service.ts
 │   ├── analysis/
 │   │   ├── index.ts
-│   │   ├── router.ts      # POST /analysis/enqueue, GET /analysis/status/:id
+│   │   ├── router.ts      # POST /analysis/enqueue, POST /analysis/batch-enqueue, GET /analysis/status/:id
 │   │   ├── schema.ts
 │   │   └── service.ts
 │   ├── coach/

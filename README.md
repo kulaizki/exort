@@ -23,7 +23,7 @@ User authenticates
   -> connects Lichess account
   -> sync fetches new games (NDJSON streaming, delta sync)
   -> games stored in Postgres (idempotent upsert)
-  -> analysis jobs enqueued
+  -> user selects games to analyze (single or batch, max 50)
   -> worker runs Stockfish, writes metrics
   -> dashboards display accuracy, blunders, openings, trends
   -> coach chat: SQL retrieval + Vertex AI Gemini
@@ -109,6 +109,8 @@ DATABASE_URL="postgres://exort:exort@localhost:5432/exort"
 PORT=3001
 CORS_ORIGIN="http://localhost:5173"
 BETTER_AUTH_SECRET="<shared-secret>"
+SYNC_SERVICE_URL="http://localhost:3002"
+SYNC_SECRET="<generate-with-openssl-rand>"
 ```
 
 ### Commands
@@ -133,7 +135,7 @@ All services deployed on a Coolify VPS with Docker. Each app has its own `Docker
 |---------|--------|
 | `exort-web` | `exort.fitzsixto.com` |
 | `exort-api` | `api.exort.fitzsixto.com` |
-| `exort-sync` | Internal only (triggered by API) |
+| `exort-sync` | `sync.exort.fitzsixto.com` (shared-secret auth) |
 | `exort-worker` | Internal only (polls DB) |
 | `exort-postgres` | Internal only |
 
