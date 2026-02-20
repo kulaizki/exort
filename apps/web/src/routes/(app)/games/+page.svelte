@@ -14,6 +14,17 @@
 		const game = data.games.find((g: { id: string }) => g.id === id);
 		return game && !game.metrics;
 	}));
+	const activeJobs = $derived(data.games.filter((g: { metrics: unknown; analysisJob?: { status: string } }) =>
+		!g.metrics && g.analysisJob && (g.analysisJob.status === 'PENDING' || g.analysisJob.status === 'PROCESSING')
+	));
+	const pendingCount = $derived(activeJobs.filter((g: { analysisJob?: { status: string } }) => g.analysisJob?.status === 'PENDING').length);
+	const processingCount = $derived(activeJobs.filter((g: { analysisJob?: { status: string } }) => g.analysisJob?.status === 'PROCESSING').length);
+
+	$effect(() => {
+		if (activeJobs.length === 0) return;
+		const interval = setInterval(() => invalidateAll(), 5000);
+		return () => clearInterval(interval);
+	});
 
 	function toggleGame(id: string) {
 		const next = new Set(selected);
@@ -134,6 +145,27 @@
 		</div>
 	{/if}
 
+	<!-- Analysis progress -->
+	{#if activeJobs.length > 0}
+		<div class="flex items-center justify-between rounded-sm border border-neutral-700 bg-neutral-800/50 px-4 py-2.5">
+			<div class="flex items-center gap-2">
+				<svg class="h-3.5 w-3.5 animate-spin text-gold" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg>
+				<span class="text-sm text-neutral-300">
+					Analyzing {activeJobs.length} game{activeJobs.length === 1 ? '' : 's'}
+					<span class="text-neutral-500">
+						({#if processingCount > 0}{processingCount} processing{/if}{#if processingCount > 0 && pendingCount > 0}, {/if}{#if pendingCount > 0}{pendingCount} pending{/if})
+					</span>
+				</span>
+			</div>
+			<button
+				onclick={() => invalidateAll()}
+				class="cursor-pointer text-xs text-gold transition-colors hover:text-gold-light"
+			>
+				Refresh
+			</button>
+		</div>
+	{/if}
+
 	<!-- Selection mode bar -->
 	{#if selectMode}
 		<div class="flex items-center justify-between rounded-sm border border-gold/20 bg-gold/5 px-4 py-2.5">
@@ -237,11 +269,12 @@
 				</thead>
 				<tbody class="divide-y divide-neutral-800">
 					{#each data.games as game}
+						{@const isAnalyzed = !!game.metrics}
 						<tr
-							class="cursor-pointer bg-neutral-900/50 transition-colors hover:bg-neutral-800/50 {selectMode && selected.has(game.id) ? 'bg-gold/5' : ''}"
+							class="bg-neutral-900/50 transition-colors {selectMode && isAnalyzed ? 'opacity-40 cursor-default' : 'cursor-pointer hover:bg-neutral-800/50'} {selectMode && selected.has(game.id) ? 'bg-gold/5' : ''}"
 							onclick={() => {
 								if (selectMode) {
-									toggleGame(game.id);
+									if (!isAnalyzed) toggleGame(game.id);
 								} else {
 									goto(`/games/${game.id}`);
 								}
@@ -249,13 +282,17 @@
 						>
 							{#if selectMode}
 								<td class="px-3 py-2.5">
-									<input
-										type="checkbox"
-										checked={selected.has(game.id)}
-										onchange={() => toggleGame(game.id)}
-										onclick={(e) => e.stopPropagation()}
-										class="cursor-pointer accent-gold"
-									/>
+									{#if isAnalyzed}
+										<span class="text-xs text-neutral-600">--</span>
+									{:else}
+										<input
+											type="checkbox"
+											checked={selected.has(game.id)}
+											onchange={() => toggleGame(game.id)}
+											onclick={(e) => e.stopPropagation()}
+											class="cursor-pointer accent-gold"
+										/>
+									{/if}
 								</td>
 							{/if}
 							<td class="px-4 py-2.5">
@@ -268,7 +305,17 @@
 							<td class="hidden px-4 py-2.5 text-neutral-400 capitalize sm:table-cell">{game.timeControl}</td>
 							<td class="hidden px-4 py-2.5 text-neutral-400 md:table-cell">{game.openingName ?? '--'}</td>
 							<td class="px-4 py-2.5 text-right font-medium {game.metrics?.accuracy != null ? 'text-neutral-200' : 'text-neutral-600'}">
-								{game.metrics?.accuracy != null ? `${game.metrics.accuracy.toFixed(1)}%` : '--'}
+								{#if game.metrics?.accuracy != null}
+									{game.metrics.accuracy.toFixed(1)}%
+								{:else if game.analysisJob?.status === 'PROCESSING'}
+									<span class="text-xs text-gold">Analyzing...</span>
+								{:else if game.analysisJob?.status === 'PENDING'}
+									<span class="text-xs text-neutral-500">Queued</span>
+								{:else if game.analysisJob?.status === 'FAILED'}
+									<span class="text-xs text-red-400">Failed</span>
+								{:else}
+									--
+								{/if}
 							</td>
 							<td class="hidden whitespace-nowrap px-4 py-2.5 text-right text-neutral-500 sm:table-cell">{formatDate(game.playedAt)}</td>
 						</tr>
