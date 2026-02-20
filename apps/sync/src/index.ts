@@ -12,6 +12,12 @@ app.get('/health', (_req, res) => {
 });
 
 app.post('/sync/:userId', async (req, res) => {
+  const secret = req.headers['x-sync-secret'];
+  if (secret !== config.SYNC_SECRET) {
+    res.status(401).json({ error: 'Unauthorized' });
+    return;
+  }
+
   const { userId } = req.params;
   try {
     const result = await SyncService.syncUser(userId);

@@ -6,7 +6,10 @@ export class SyncService {
     try {
       res = await fetch(`${config.SYNC_SERVICE_URL}/sync/${userId}`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' }
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Sync-Secret': config.SYNC_SECRET
+        }
       });
     } catch {
       throw new Error(`Sync service unreachable at ${config.SYNC_SERVICE_URL}`);
