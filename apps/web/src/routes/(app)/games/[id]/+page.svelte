@@ -1,8 +1,13 @@
 <script lang="ts">
-	let { data } = $props();
+	import { enhance } from '$app/forms';
+
+	let { data, form } = $props();
 	const game = $derived(data.game);
 	const metrics = $derived(game.metrics);
 	const phases = $derived(metrics?.phaseErrors as Record<string, Record<string, number>> | null);
+	let analyzing = $state(false);
+	const hasAnalysis = $derived(!!game.analysisJob);
+	const analysisStatus = $derived(game.analysisJob?.status);
 
 	function formatDate(dateStr: string) {
 		return new Date(dateStr).toLocaleDateString('en-US', {
@@ -93,7 +98,7 @@
 			<div>
 				<h2 class="mb-3 text-sm font-medium text-neutral-300">Phase Breakdown</h2>
 				<div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
-					{#each ['opening', 'middlegame', 'endgame'] as phase}
+					{#each ['opening', 'middlegame', 'endgame'] as phase (phase)}
 						{@const p = phases[phase]}
 						{#if p}
 							<div class="rounded-sm border border-neutral-800 bg-neutral-900 p-4">
@@ -127,7 +132,7 @@
 							</tr>
 						</thead>
 						<tbody class="divide-y divide-neutral-800/50">
-							{#each game.moveEvaluations as move}
+							{#each game.moveEvaluations as move (move.moveNumber)}
 								<tr class="bg-neutral-900/50">
 									<td class="px-3 py-1.5 text-neutral-400">{move.moveNumber}</td>
 									<td class="px-3 py-1.5 capitalize text-neutral-400">{move.color}</td>
@@ -154,8 +159,32 @@
 		{/if}
 	{:else}
 		<div class="rounded-sm border border-dashed border-neutral-700 px-6 py-8 text-center">
-			<p class="text-sm text-neutral-400">This game hasn't been analyzed yet.</p>
-			<p class="mt-1 text-xs text-neutral-500">Analysis will be available once the Stockfish worker processes this game.</p>
+			{#if form?.analyzed}
+				<p class="text-sm text-green-400">Analysis queued. The Stockfish worker will process this game shortly.</p>
+			{:else if form?.analyzeError}
+				<p class="text-sm text-red-400">{form.analyzeError}</p>
+			{:else if hasAnalysis}
+				<p class="text-sm text-neutral-400">Analysis is {analysisStatus?.toLowerCase() ?? 'pending'}...</p>
+				<p class="mt-1 text-xs text-neutral-500">Refresh to check for results.</p>
+			{:else}
+				<p class="text-sm text-neutral-400">This game hasn't been analyzed yet.</p>
+				<form method="post" action="?/analyze" use:enhance={() => {
+					analyzing = true;
+					return async ({ update }) => {
+						await update();
+						analyzing = false;
+					};
+				}}>
+					<button
+						type="submit"
+						disabled={analyzing}
+						class="mt-3 inline-flex cursor-pointer items-center gap-2 rounded-sm bg-gold px-3 py-1.5 text-xs font-semibold text-neutral-950 transition-colors hover:bg-gold-light disabled:cursor-not-allowed disabled:opacity-50"
+					>
+						<svg class="h-3.5 w-3.5 {analyzing ? 'animate-spin' : ''}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m16 12-4-4-4 4"/><path d="M12 16V8"/></svg>
+						{analyzing ? 'Queuing...' : 'Analyze with Stockfish'}
+					</button>
+				</form>
+			{/if}
 		</div>
 	{/if}
 

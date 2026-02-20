@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { AnalysisService } from './service.js';
-import { enqueueBody, jobIdParam } from './schema.js';
+import { enqueueBody, batchEnqueueBody, jobIdParam } from './schema.js';
 
 export const analysisRouter = Router();
 
@@ -13,6 +13,16 @@ analysisRouter.post('/enqueue', async (req, res, next) => {
       return;
     }
     res.status(201).json(job);
+  } catch (err) {
+    next(err);
+  }
+});
+
+analysisRouter.post('/batch-enqueue', async (req, res, next) => {
+  try {
+    const { gameIds } = batchEnqueueBody.parse(req.body);
+    const jobs = await AnalysisService.batchEnqueue(gameIds, req.userId!);
+    res.status(201).json({ jobs, count: jobs.length });
   } catch (err) {
     next(err);
   }

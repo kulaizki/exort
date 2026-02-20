@@ -2,7 +2,6 @@ import { prisma } from '../lib/prisma.js';
 import { LichessClient } from '../lichess/client.js';
 import { parseNdjsonLine } from '../lichess/parser.js';
 import { mapLichessGame } from './mapper.js';
-import { enqueueAnalysisJobs } from '../jobs/enqueue.js';
 import type { Prisma } from '@exort/db';
 
 const BATCH_SIZE = 50;
@@ -22,7 +21,6 @@ export class SyncService {
 
     let synced = 0;
     let batch: Prisma.GameCreateManyInput[] = [];
-    const newGameIds: string[] = [];
 
     const flushBatch = async () => {
       if (batch.length === 0) return;
@@ -31,12 +29,6 @@ export class SyncService {
         skipDuplicates: true
       });
       synced += result.count;
-
-      const createdGames = await prisma.game.findMany({
-        where: { lichessGameId: { in: batch.map((g) => g.lichessGameId) }, userId },
-        select: { id: true }
-      });
-      newGameIds.push(...createdGames.map((g) => g.id));
       batch = [];
     };
 
@@ -55,8 +47,6 @@ export class SyncService {
       where: { userId },
       data: { lastSyncedAt: new Date() }
     });
-
-    await enqueueAnalysisJobs(newGameIds);
 
     return { synced };
   }

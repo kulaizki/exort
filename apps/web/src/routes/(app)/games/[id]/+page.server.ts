@@ -1,5 +1,5 @@
-import { error } from '@sveltejs/kit';
-import type { PageServerLoad } from './$types';
+import { error, fail } from '@sveltejs/kit';
+import type { PageServerLoad, Actions } from './$types';
 import { api } from '$lib/server/api';
 
 export const load: PageServerLoad = async (event) => {
@@ -11,4 +11,20 @@ export const load: PageServerLoad = async (event) => {
 	}
 
 	return { game: res.data };
+};
+
+export const actions: Actions = {
+	analyze: async (event) => {
+		const token = event.locals.session!.token;
+		const res = await api('/analysis/enqueue', token, {
+			method: 'POST',
+			body: JSON.stringify({ gameId: event.params.id })
+		});
+
+		if (res.error) {
+			return fail(400, { analyzeError: res.error });
+		}
+
+		return { analyzed: true };
+	}
 };

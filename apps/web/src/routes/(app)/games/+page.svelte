@@ -6,6 +6,29 @@
 
 	let { data, form } = $props();
 	let syncing = $state(false);
+	let analyzing = $state(false);
+	let selected = $state<Set<string>>(new Set());
+	const allOnPage = $derived(data.games.map((g: { id: string }) => g.id));
+	const allSelected = $derived(allOnPage.length > 0 && allOnPage.every((id: string) => selected.has(id)));
+	const unanalyzedSelected = $derived([...selected].filter((id) => {
+		const game = data.games.find((g: { id: string }) => g.id === id);
+		return game && !game.metrics;
+	}));
+
+	function toggleGame(id: string) {
+		const next = new Set(selected);
+		if (next.has(id)) next.delete(id);
+		else next.add(id);
+		selected = next;
+	}
+
+	function toggleAll() {
+		if (allSelected) {
+			selected = new Set();
+		} else {
+			selected = new Set(allOnPage);
+		}
+	}
 
 	function applyFilter(key: string, value: string) {
 		const params = new URLSearchParams(page.url.searchParams);
@@ -87,6 +110,18 @@
 		</div>
 	{/if}
 
+	{#if form?.analyzed}
+		<div class="rounded-sm border border-green-500/20 bg-green-500/10 px-4 py-2.5 text-sm text-green-400">
+			{form.count} game{form.count === 1 ? '' : 's'} queued for analysis.
+		</div>
+	{/if}
+
+	{#if form?.analyzeError}
+		<div class="rounded-sm border border-red-500/20 bg-red-500/10 px-4 py-2.5 text-sm text-red-400">
+			{form.analyzeError}
+		</div>
+	{/if}
+
 	<!-- Filters -->
 	<div class="flex flex-wrap gap-2">
 		<select
@@ -122,12 +157,57 @@
 		</select>
 	</div>
 
+	<!-- Selection bar -->
+	{#if selected.size > 0}
+		<div class="flex items-center justify-between rounded-sm border border-gold/20 bg-gold/5 px-4 py-2.5">
+			<span class="text-sm text-neutral-300">{selected.size} game{selected.size === 1 ? '' : 's'} selected</span>
+			<div class="flex items-center gap-2">
+				<button
+					onclick={() => selected = new Set()}
+					class="cursor-pointer text-xs text-neutral-400 transition-colors hover:text-neutral-200"
+				>
+					Clear
+				</button>
+				{#if unanalyzedSelected.length > 0}
+					<form method="post" action="?/analyze" use:enhance={() => {
+						analyzing = true;
+						return async ({ update }) => {
+							await update();
+							analyzing = false;
+							selected = new Set();
+							await invalidateAll();
+						};
+					}}>
+						{#each unanalyzedSelected as id}
+							<input type="hidden" name="gameIds" value={id} />
+						{/each}
+						<button
+							type="submit"
+							disabled={analyzing}
+							class="inline-flex cursor-pointer items-center gap-1.5 rounded-sm bg-gold px-3 py-1.5 text-xs font-semibold text-neutral-950 transition-colors hover:bg-gold-light disabled:cursor-not-allowed disabled:opacity-50"
+						>
+							{analyzing ? 'Queuing...' : `Analyze ${unanalyzedSelected.length} game${unanalyzedSelected.length === 1 ? '' : 's'}`}
+						</button>
+					</form>
+				{/if}
+			</div>
+		</div>
+	{/if}
+
 	<!-- Games table -->
 	{#if data.games.length > 0}
 		<div class="overflow-x-auto rounded-sm border border-neutral-800">
 			<table class="w-full text-sm">
 				<thead>
 					<tr class="border-b border-neutral-800 bg-neutral-900">
+						<th class="w-10 px-3 py-2.5">
+							<input
+								type="checkbox"
+								checked={allSelected}
+								onchange={toggleAll}
+								class="cursor-pointer accent-gold"
+							/>
+						</th>
 						<th class="px-4 py-2.5 text-left text-xs font-medium text-neutral-500">Result</th>
 						<th class="px-4 py-2.5 text-left text-xs font-medium text-neutral-500">Opponent</th>
 						<th class="hidden px-4 py-2.5 text-left text-xs font-medium text-neutral-500 sm:table-cell">Time Control</th>
@@ -142,6 +222,14 @@
 							class="cursor-pointer bg-neutral-900/50 transition-colors hover:bg-neutral-800/50"
 							onclick={() => goto(`/games/${game.id}`)}
 						>
+							<td class="px-3 py-2.5" onclick={(e) => e.stopPropagation()}>
+								<input
+									type="checkbox"
+									checked={selected.has(game.id)}
+									onchange={() => toggleGame(game.id)}
+									class="cursor-pointer accent-gold"
+								/>
+							</td>
 							<td class="px-4 py-2.5">
 								<span class="inline-flex h-6 w-6 items-center justify-center rounded-sm text-xs font-bold
 									{game.result === 'win' ? 'bg-green-500/20 text-green-400' : game.result === 'loss' ? 'bg-red-500/20 text-red-400' : 'bg-neutral-700 text-neutral-400'}">
@@ -154,7 +242,7 @@
 							<td class="px-4 py-2.5 text-right font-medium {game.metrics?.accuracy != null ? 'text-neutral-200' : 'text-neutral-600'}">
 								{game.metrics?.accuracy != null ? `${game.metrics.accuracy.toFixed(1)}%` : '--'}
 							</td>
-							<td class="hidden px-4 py-2.5 text-right text-neutral-500 sm:table-cell">{formatDate(game.playedAt)}</td>
+							<td class="hidden whitespace-nowrap px-4 py-2.5 text-right text-neutral-500 sm:table-cell">{formatDate(game.playedAt)}</td>
 						</tr>
 					{/each}
 				</tbody>
