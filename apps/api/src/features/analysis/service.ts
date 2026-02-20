@@ -42,4 +42,27 @@ export class AnalysisService {
   static async getStatus(jobId: string) {
     return prisma.analysisJob.findUnique({ where: { id: jobId } });
   }
+
+  static async getActiveJobCounts(userId: string) {
+    const jobs = await prisma.analysisJob.findMany({
+      where: {
+        status: { in: ['PENDING', 'PROCESSING'] },
+        game: { userId }
+      },
+      select: { status: true }
+    });
+    const processing = jobs.filter((j) => j.status === 'PROCESSING').length;
+    const pending = jobs.filter((j) => j.status === 'PENDING').length;
+    return { total: jobs.length, processing, pending };
+  }
+
+  static async cleanupStaleJobs(userId: string) {
+    const result = await prisma.analysisJob.deleteMany({
+      where: {
+        status: 'PENDING',
+        game: { userId }
+      }
+    });
+    return { deleted: result.count };
+  }
 }

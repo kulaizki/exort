@@ -28,6 +28,24 @@ analysisRouter.post('/batch-enqueue', async (req, res, next) => {
   }
 });
 
+analysisRouter.get('/active', async (req, res, next) => {
+  try {
+    const counts = await AnalysisService.getActiveJobCounts(req.userId!);
+    res.json(counts);
+  } catch (err) {
+    next(err);
+  }
+});
+
+analysisRouter.delete('/stale', async (req, res, next) => {
+  try {
+    const result = await AnalysisService.cleanupStaleJobs(req.userId!);
+    res.json(result);
+  } catch (err) {
+    next(err);
+  }
+});
+
 analysisRouter.get('/status/:jobId', async (req, res, next) => {
   try {
     const { jobId } = jobIdParam.parse(req.params);

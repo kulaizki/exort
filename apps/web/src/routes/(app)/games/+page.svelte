@@ -14,14 +14,12 @@
 		const game = data.games.find((g: { id: string }) => g.id === id);
 		return game && !game.metrics;
 	}));
-	const activeJobs = $derived(data.games.filter((g: { metrics: unknown; analysisJob?: { status: string } }) =>
-		!g.metrics && g.analysisJob && (g.analysisJob.status === 'PENDING' || g.analysisJob.status === 'PROCESSING')
-	));
-	const pendingCount = $derived(activeJobs.filter((g: { analysisJob?: { status: string } }) => g.analysisJob?.status === 'PENDING').length);
-	const processingCount = $derived(activeJobs.filter((g: { analysisJob?: { status: string } }) => g.analysisJob?.status === 'PROCESSING').length);
+	const activeJobTotal = $derived(data.activeJobs.total);
+	const pendingCount = $derived(data.activeJobs.pending);
+	const processingCount = $derived(data.activeJobs.processing);
 
 	$effect(() => {
-		if (activeJobs.length === 0) return;
+		if (activeJobTotal === 0) return;
 		const interval = setInterval(() => invalidateAll(), 5000);
 		return () => clearInterval(interval);
 	});
@@ -146,12 +144,12 @@
 	{/if}
 
 	<!-- Analysis progress -->
-	{#if activeJobs.length > 0}
+	{#if activeJobTotal > 0}
 		<div class="flex items-center justify-between rounded-sm border border-neutral-700 bg-neutral-800/50 px-4 py-2.5">
 			<div class="flex items-center gap-2">
 				<svg class="h-3.5 w-3.5 animate-spin text-gold" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg>
 				<span class="text-sm text-neutral-300">
-					Analyzing {activeJobs.length} game{activeJobs.length === 1 ? '' : 's'}
+					Analyzing {activeJobTotal} game{activeJobTotal === 1 ? '' : 's'}
 					<span class="text-neutral-500">
 						({#if processingCount > 0}{processingCount} processing{/if}{#if processingCount > 0 && pendingCount > 0}, {/if}{#if pendingCount > 0}{pendingCount} pending{/if})
 					</span>

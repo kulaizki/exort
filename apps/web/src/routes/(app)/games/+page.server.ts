@@ -14,13 +14,17 @@ export const load: PageServerLoad = async (event) => {
 	if (url.searchParams.get('sort')) params.set('sort', url.searchParams.get('sort')!);
 	if (url.searchParams.get('order')) params.set('order', url.searchParams.get('order')!);
 
-	const res = await api(`/games?${params.toString()}`, token);
+	const [res, activeRes] = await Promise.all([
+		api(`/games?${params.toString()}`, token),
+		api('/analysis/active', token)
+	]);
 
 	return {
 		games: res.data?.data ?? [],
 		total: res.data?.total ?? 0,
 		page: res.data?.page ?? 1,
 		totalPages: res.data?.totalPages ?? 1,
+		activeJobs: activeRes.data ?? { total: 0, processing: 0, pending: 0 },
 		filters: {
 			timeControl: url.searchParams.get('timeControl') || '',
 			result: url.searchParams.get('result') || '',
