@@ -5,7 +5,7 @@ import chess
 import chess.pgn
 from stockfish import Stockfish
 
-from src.config import ANALYSIS_DEPTH, STOCKFISH_PATH
+from src.config import ANALYSIS_DEPTH, STOCKFISH_PATH, STOCKFISH_THREADS, STOCKFISH_HASH_MB
 from src.analysis.classifier import classify_move
 from src.analysis.accuracy import calculate_accuracy
 from src.analysis.phase import aggregate_phase_errors
@@ -61,7 +61,11 @@ def analyze_game(pgn: str, game_id: str) -> AnalysisResult:
     opening_name = headers.get("Opening") or headers.get("Variant") or None
     opening_eco = headers.get("ECO") or None
 
-    sf = Stockfish(path=STOCKFISH_PATH, depth=ANALYSIS_DEPTH)
+    sf = Stockfish(
+        path=STOCKFISH_PATH,
+        depth=ANALYSIS_DEPTH,
+        parameters={"Threads": STOCKFISH_THREADS, "Hash": STOCKFISH_HASH_MB},
+    )
 
     move_evals: list[MoveEval] = []
     board = game.board()
