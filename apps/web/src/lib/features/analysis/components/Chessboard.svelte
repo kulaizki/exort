@@ -93,37 +93,35 @@
 		height: 100%;
 	}
 
-	/* Dark-theme board squares */
-	.chessboard-wrap :global(cg-board square.white) {
+	/* Dark-theme board — light squares as bg-color, dark squares via SVG overlay */
+	.chessboard-wrap :global(cg-board) {
 		background-color: #6b6456;
-	}
-
-	.chessboard-wrap :global(cg-board square.black) {
-		background-color: #403b32;
+		background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOng9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIHZpZXdCb3g9IjAgMCA4IDgiIHNoYXBlLXJlbmRlcmluZz0iY3Jpc3BFZGdlcyI+PGcgaWQ9ImEiPjxnIGlkPSJiIj48ZyBpZD0iYyI+PGcgaWQ9ImQiPjxyZWN0IHdpZHRoPSIxIiBoZWlnaHQ9IjEiIGlkPSJlIiBvcGFjaXR5PSIwIi8+PHVzZSB4PSIxIiB5PSIxIiBocmVmPSIjZSIgeDpocmVmPSIjZSIvPjxyZWN0IHk9IjEiIHdpZHRoPSIxIiBoZWlnaHQ9IjEiIGlkPSJmIiBvcGFjaXR5PSIwLjM4Ii8+PHVzZSB4PSIxIiB5PSItMSIgaHJlZj0iI2YiIHg6aHJlZj0iI2YiLz48L2c+PHVzZSB4PSIyIiBocmVmPSIjZCIgeDpocmVmPSIjZCIvPjwvZz48dXNlIHg9IjQiIGhyZWY9IiNjIiB4OmhyZWY9IiNjIi8+PC9nPjx1c2UgeT0iMiIgaHJlZj0iI2IiIHg6aHJlZj0iI2IiLz48L2c+PHVzZSB5PSI0IiBocmVmPSIjYSIgeDpocmVmPSIjYSIvPjwvc3ZnPgo=');
 	}
 
 	/* Last-move highlight (gold tinted) */
 	.chessboard-wrap :global(cg-board square.last-move) {
-		background-color: rgba(255, 184, 0, 0.25) !important;
+		background-color: rgba(255, 184, 0, 0.41) !important;
 	}
 
-	/* Check highlight (subtle red) */
+	/* Check highlight */
 	.chessboard-wrap :global(cg-board square.check) {
 		background: radial-gradient(
 			ellipse at center,
-			rgba(255, 0, 0, 0.5) 0%,
-			rgba(200, 0, 0, 0.25) 40%,
-			rgba(150, 0, 0, 0) 70%
+			rgba(255, 0, 0, 1) 0%,
+			rgba(231, 0, 0, 1) 25%,
+			rgba(169, 0, 0, 0) 89%,
+			rgba(158, 0, 0, 0) 100%
 		) !important;
 	}
 
 	/* Selected square */
 	.chessboard-wrap :global(cg-board square.selected) {
-		background-color: rgba(255, 184, 0, 0.35) !important;
+		background-color: rgba(255, 184, 0, 0.5) !important;
 	}
 
 	/* Coordinate labels */
-	.chessboard-wrap :global(coords) {
+	.chessboard-wrap :global(.cg-wrap coords) {
 		color: #888;
 		font-size: 10px;
 	}
