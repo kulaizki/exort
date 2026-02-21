@@ -12,8 +12,9 @@ Chess improvement platform. Syncs games from Lichess, analyzes with Stockfish 18
 | **API** | Express 5 + TypeScript + Prisma 7 + Zod |
 | **Sync** | Node.js + TypeScript — Lichess delta sync |
 | **Worker** | Python + Stockfish 18 — CPU-bound analysis |
-| **Database** | PostgreSQL 16 |
+| **Database** | PostgreSQL 16 + Prisma Migrate (auto-deploy) |
 | **AI** | Vertex AI Gemini 2.5 Flash — structured SQL RAG |
+| **Charts** | Chart.js (SSR-safe via dynamic import) |
 | **Infra** | Coolify VPS (all services) + GCP (Vertex AI only) |
 
 ## Architecture
@@ -79,8 +80,8 @@ cp apps/api/.env.example apps/api/.env
 # apps/web/.env and apps/api/.env
 openssl rand -base64 32
 
-# push schema to local database
-pnpm -F @exort/web db:push
+# set up local database (create initial migration)
+cd packages/db && npx prisma migrate dev --name init && cd ../..
 
 # run all services
 pnpm dev
@@ -122,14 +123,30 @@ SYNC_SECRET="<generate-with-openssl-rand>"
 | `pnpm -F @exort/api dev` | API only |
 | `pnpm -F @exort/sync dev` | Sync only |
 | `pnpm -F @exort/web check` | Svelte type check |
-| `pnpm -F @exort/web db:push` | Push Prisma schema to DB |
-| `pnpm -F @exort/web db:studio` | Open Prisma Studio |
 | `pnpm -F @exort/api test` | Run API tests |
 | `pnpm -F @exort/sync test` | Run sync tests |
 
+### Database (from `packages/db/`)
+
+| Command | Description |
+|---------|-------------|
+| `npx prisma migrate dev --name <name>` | Create a migration (production-bound changes) |
+| `npx prisma db push` | Quick-sync schema to local DB (prototyping only) |
+| `npx prisma studio` | Open DB browser |
+| `npx prisma generate` | Regenerate Prisma Client |
+| `npx prisma migrate status` | Check migration status |
+
+### Schema change workflow
+
+```
+edit schema.prisma --> prisma migrate dev --name <name> --> git push
+```
+
+Production DB updates automatically on deploy. The API container runs `prisma migrate deploy` on startup — no manual steps against production needed. See [docs/database.md](docs/database.md) for details.
+
 ## Deployment
 
-All services deployed on a Coolify VPS with Docker. Each app has its own `Dockerfile` (3-stage: build, deps, runtime). Coolify handles reverse proxy (Traefik), SSL, and auto-deploy via GitHub webhooks.
+All services deployed on a Coolify VPS with Docker. Each app has its own `Dockerfile` (3-stage: build, deps, runtime). Coolify handles reverse proxy (Traefik), SSL, and auto-deploy via GitHub webhooks. The API entrypoint runs `prisma migrate deploy` before starting, so schema changes auto-apply on deploy.
 
 | Service | Domain |
 |---------|--------|
