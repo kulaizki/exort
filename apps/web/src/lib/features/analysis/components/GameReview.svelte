@@ -96,7 +96,7 @@
 		</div>
 
 		<!-- Side panel -->
-		<div class="flex min-w-0 flex-1 flex-col gap-3">
+		<div class="flex min-w-0 flex-1 flex-col gap-3 lg:overflow-hidden">
 			<!-- Controls (desktop only) -->
 			<div class="hidden lg:block">
 				<BoardControls

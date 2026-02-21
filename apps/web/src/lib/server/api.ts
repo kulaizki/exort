@@ -6,6 +6,7 @@ export async function api(path: string, token: string, options?: RequestInit) {
 	try {
 		const res = await fetch(`${API_URL}${path}`, {
 			...options,
+			signal: options?.signal ?? AbortSignal.timeout(10_000),
 			headers: {
 				'Content-Type': 'application/json',
 				Authorization: `Bearer ${token}`,
