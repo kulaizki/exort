@@ -39,6 +39,8 @@
 	},
 	"dependencies": {
 		"@exort/db": "workspace:*",
-		"@prisma/adapter-pg": "^7.4.0"
+		"@prisma/adapter-pg": "^7.4.0",
+		"chessground": "^9.2.1",
+		"chessops": "^0.15.0"
 	}
 }

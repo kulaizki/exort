@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { GameReview } from '$lib/features/analysis';
 
 	let { data, form } = $props();
 	const game = $derived(data.game);
@@ -56,6 +57,11 @@
 			</div>
 		</div>
 	</div>
+
+	<!-- Interactive board -->
+	{#if game.pgn}
+		<GameReview pgn={game.pgn} color={game.color} moveEvaluations={game.moveEvaluations} />
+	{/if}
 
 	{#if metrics}
 		<!-- Metrics panel -->
@@ -115,48 +121,6 @@
 			</div>
 		{/if}
 
-		<!-- Move evaluations -->
-		{#if game.moveEvaluations?.length > 0}
-			<div>
-				<h2 class="mb-3 text-sm font-medium text-neutral-300">Move Evaluations</h2>
-				<div class="max-h-80 overflow-y-auto rounded-sm border border-neutral-800">
-					<table class="w-full text-xs">
-						<thead class="sticky top-0 bg-neutral-900">
-							<tr class="border-b border-neutral-800">
-								<th class="px-3 py-2 text-left text-neutral-500">#</th>
-								<th class="px-3 py-2 text-left text-neutral-500">Color</th>
-								<th class="px-3 py-2 text-left text-neutral-500">Played</th>
-								<th class="px-3 py-2 text-left text-neutral-500">Best</th>
-								<th class="px-3 py-2 text-right text-neutral-500">Eval</th>
-								<th class="px-3 py-2 text-right text-neutral-500">Class</th>
-							</tr>
-						</thead>
-						<tbody class="divide-y divide-neutral-800/50">
-							{#each game.moveEvaluations as move (move.id)}
-								<tr class="bg-neutral-900/50">
-									<td class="px-3 py-1.5 text-neutral-400">{move.moveNumber}</td>
-									<td class="px-3 py-1.5 capitalize text-neutral-400">{move.color}</td>
-									<td class="px-3 py-1.5 font-mono text-neutral-200">{move.playedMoveUci}</td>
-									<td class="px-3 py-1.5 font-mono text-neutral-400">{move.bestMoveUci ?? '--'}</td>
-									<td class="px-3 py-1.5 text-right text-neutral-300">{move.evalCp > 0 ? '+' : ''}{(move.evalCp / 100).toFixed(1)}</td>
-									<td class="px-3 py-1.5 text-right">
-										<span class="rounded-sm px-1.5 py-0.5 text-[10px] font-medium
-											{move.classification === 'BLUNDER' ? 'bg-red-500/20 text-red-400' :
-											 move.classification === 'MISTAKE' ? 'bg-orange-500/20 text-orange-400' :
-											 move.classification === 'INACCURACY' ? 'bg-yellow-500/20 text-yellow-400' :
-											 move.classification === 'BRILLIANT' ? 'bg-cyan-500/20 text-cyan-400' :
-											 move.classification === 'EXCELLENT' ? 'bg-green-500/20 text-green-400' :
-											 'bg-neutral-700 text-neutral-400'}">
-											{move.classification}
-										</span>
-									</td>
-								</tr>
-							{/each}
-						</tbody>
-					</table>
-				</div>
-			</div>
-		{/if}
 	{:else}
 		<div class="rounded-sm border border-dashed border-neutral-700 px-6 py-8 text-center">
 			{#if form?.analyzed}
