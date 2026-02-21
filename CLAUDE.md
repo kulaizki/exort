@@ -133,11 +133,17 @@ src/
 - `pnpm dev` — run all services via concurrently
 - `pnpm -F @exort/web dev` — web only
 - `pnpm -F @exort/web check` — svelte-check
-- `pnpm -F @exort/web db:push` — prisma db push
-- `pnpm -F @exort/web db:studio` — prisma studio
 - `pnpm -F @exort/api dev` — api only
 - `pnpm -F @exort/api test` — run api tests (vitest)
 - `pnpm -F @exort/sync test` — run sync tests (vitest)
+
+### Database (run from `packages/db/`)
+
+- `npx prisma migrate dev --name <name>` — create migration (use for all production-bound changes)
+- `npx prisma db push` — quick-sync schema to local DB (prototyping only, no migration file)
+- `npx prisma studio` — open DB browser
+- `npx prisma generate` — regenerate Prisma Client
+- `npx prisma migrate status` — check migration status
 
 ## Conventions
 

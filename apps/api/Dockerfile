@@ -19,15 +19,21 @@ FROM base AS deps
 WORKDIR /app
 COPY --from=builder /app/apps/api/package.json ./
 RUN node -e "const p=JSON.parse(require('fs').readFileSync('package.json','utf8'));for(const t of['dependencies','devDependencies'])if(p[t])for(const[k,v]of Object.entries(p[t]))if(v.startsWith('workspace:'))delete p[t][k];require('fs').writeFileSync('package.json',JSON.stringify(p,null,2))"
-RUN npm install --omit=dev --ignore-scripts
+RUN npm install --omit=dev
 
 # Stage 3: Runtime
 FROM node:20-slim AS runtime
+RUN apt-get update -y && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=builder /app/db-bundle ./node_modules/@exort/db
 COPY --from=builder /app/apps/api/dist ./dist
 COPY --from=builder /app/apps/api/package.json ./
+# Prisma schema, migrations, and config for migrate deploy
+COPY --from=builder /app/packages/db/prisma ./prisma
+COPY --from=builder /app/packages/db/prisma.config.ts ./prisma.config.ts
+COPY apps/api/entrypoint.sh ./entrypoint.sh
+RUN chmod +x entrypoint.sh
 ENV NODE_ENV=production
 EXPOSE 3001
-CMD ["node", "dist/index.js"]
+CMD ["./entrypoint.sh"]
