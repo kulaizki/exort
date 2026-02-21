@@ -80,28 +80,31 @@
 
 <style>
 	.chessboard-wrap {
-		aspect-ratio: 1 / 1;
 		width: 100%;
 		position: relative;
+		padding-bottom: 100%; /* 1:1 aspect ratio */
 	}
 
 	.cg-wrap {
+		position: absolute;
+		top: 0;
+		left: 0;
 		width: 100%;
 		height: 100%;
 	}
 
 	/* Dark-theme board squares */
 	.chessboard-wrap :global(cg-board square.white) {
-		background-color: #3d3d3d;
+		background-color: #6b6456;
 	}
 
 	.chessboard-wrap :global(cg-board square.black) {
-		background-color: #2a2a2a;
+		background-color: #403b32;
 	}
 
 	/* Last-move highlight (gold tinted) */
 	.chessboard-wrap :global(cg-board square.last-move) {
-		background-color: rgba(255, 184, 0, 0.15);
+		background-color: rgba(255, 184, 0, 0.25) !important;
 	}
 
 	/* Check highlight (subtle red) */
@@ -111,17 +114,17 @@
 			rgba(255, 0, 0, 0.5) 0%,
 			rgba(200, 0, 0, 0.25) 40%,
 			rgba(150, 0, 0, 0) 70%
-		);
+		) !important;
 	}
 
 	/* Selected square */
 	.chessboard-wrap :global(cg-board square.selected) {
-		background-color: rgba(255, 184, 0, 0.3);
+		background-color: rgba(255, 184, 0, 0.35) !important;
 	}
 
 	/* Coordinate labels */
 	.chessboard-wrap :global(coords) {
-		color: #666;
+		color: #888;
 		font-size: 10px;
 	}
 </style>

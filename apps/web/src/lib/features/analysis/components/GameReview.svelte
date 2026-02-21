@@ -64,34 +64,34 @@
 	</div>
 {:else if result.tree}
 	{@const tree = result.tree}
-	<div class="flex flex-col gap-4 lg:flex-row lg:gap-6">
-		<!-- Eval bar + Board column -->
-		<div class="flex gap-3 lg:gap-4">
-			{#if hasEvals}
-				<div class="hidden lg:flex">
-					<EvalBar evalCp={tree.currentEvalCp} />
-				</div>
-			{/if}
-			<div class="w-full max-w-[560px]">
-				<Chessboard
-					fen={tree.currentFen}
-					{orientation}
-					lastMove={tree.currentLastMove}
-					autoShapes={hasEvals ? tree.bestMoveShapes : []}
-					check={tree.currentCheck}
+	<div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:gap-6">
+		<!-- Eval bar (desktop only) -->
+		{#if hasEvals}
+			<div class="hidden shrink-0 lg:block" style="height: min(560px, 50vw);">
+				<EvalBar evalCp={tree.currentEvalCp} />
+			</div>
+		{/if}
+
+		<!-- Board column -->
+		<div class="w-full shrink-0 lg:w-[560px]">
+			<Chessboard
+				fen={tree.currentFen}
+				{orientation}
+				lastMove={tree.currentLastMove}
+				autoShapes={hasEvals ? tree.bestMoveShapes : []}
+				check={tree.currentCheck}
+			/>
+			<!-- Controls under board on mobile -->
+			<div class="mt-3 flex justify-center lg:hidden">
+				<BoardControls
+					canGoBack={tree.canGoBack}
+					canGoForward={tree.canGoForward}
+					onFirst={tree.goToStart}
+					onPrev={tree.goBack}
+					onNext={tree.goForward}
+					onLast={tree.goToEnd}
+					onFlip={flipBoard}
 				/>
-				<!-- Controls under board on mobile -->
-				<div class="mt-3 flex justify-center lg:hidden">
-					<BoardControls
-						canGoBack={tree.canGoBack}
-						canGoForward={tree.canGoForward}
-						onFirst={tree.goToStart}
-						onPrev={tree.goBack}
-						onNext={tree.goForward}
-						onLast={tree.goToEnd}
-						onFlip={flipBoard}
-					/>
-				</div>
 			</div>
 		</div>
 
