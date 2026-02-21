@@ -64,10 +64,10 @@
 	</div>
 {:else if result.tree}
 	{@const tree = result.tree}
-	<div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:gap-6">
+	<div class="flex flex-col gap-4 lg:flex-row lg:items-stretch lg:gap-6">
 		<!-- Eval bar (desktop only) -->
 		{#if hasEvals}
-			<div class="hidden shrink-0 lg:block" style="height: min(560px, 50vw);">
+			<div class="hidden shrink-0 lg:block">
 				<EvalBar evalCp={tree.currentEvalCp} />
 			</div>
 		{/if}
