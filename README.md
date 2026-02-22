@@ -24,7 +24,7 @@ User authenticates
   -> connects Lichess account
   -> sync fetches new games (NDJSON streaming, delta sync)
   -> games stored in Postgres (idempotent upsert)
-  -> user selects games to analyze (single or batch, max 50)
+  -> user clicks analyze on a game
   -> worker runs Stockfish, writes metrics
   -> dashboards display accuracy, blunders, openings, trends
   -> coach chat: SQL retrieval + Vertex AI Gemini
@@ -57,6 +57,11 @@ exort/
 - Node.js >= 20
 - pnpm 10.x (`corepack enable`)
 - Docker (for local Postgres)
+- Python 3.11+ (for Stockfish worker)
+- Stockfish (for game analysis)
+  - **macOS**: `brew install stockfish`
+  - **Linux**: `sudo apt install stockfish`
+  - **Windows**: download from [stockfishchess.org](https://stockfishchess.org/download/) and add to PATH
 
 ### Setup
 
@@ -75,6 +80,7 @@ docker compose up -d
 cp .env.example .env
 cp apps/web/.env.example apps/web/.env
 cp apps/api/.env.example apps/api/.env
+cp apps/worker/.env.example apps/worker/.env
 
 # generate a shared secret and set BETTER_AUTH_SECRET in both
 # apps/web/.env and apps/api/.env
@@ -83,8 +89,19 @@ openssl rand -base64 32
 # set up local database (create initial migration)
 cd packages/db && npx prisma migrate dev --name init && cd ../..
 
+# install worker dependencies
+cd apps/worker && pip install -r requirements.txt && cd ../..
+
+# update STOCKFISH_PATH in apps/worker/.env to match your OS
+# macOS:   /opt/homebrew/bin/stockfish
+# Linux:   /usr/games/stockfish
+# Windows: C:\stockfish\stockfish.exe
+
 # run all services
 pnpm dev
+
+# run the stockfish worker (separate terminal)
+cd apps/worker && python -m src.worker
 ```
 
 ### Environment Variables
@@ -112,6 +129,14 @@ CORS_ORIGIN="http://localhost:5173"
 BETTER_AUTH_SECRET="<shared-secret>"
 SYNC_SERVICE_URL="http://localhost:3002"
 SYNC_SECRET="<generate-with-openssl-rand>"
+```
+
+**`apps/worker/.env`**:
+```
+DATABASE_URL="postgres://exort:exort@localhost:5432/exort"
+STOCKFISH_PATH="/opt/homebrew/bin/stockfish"   # macOS (Homebrew)
+#STOCKFISH_PATH="/usr/games/stockfish"          # Linux (apt)
+#STOCKFISH_PATH="C:\stockfish\stockfish.exe"    # Windows
 ```
 
 ### Commands
