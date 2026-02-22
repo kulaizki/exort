@@ -71,7 +71,7 @@
 
 <div
 	bind:this={containerEl}
-	class="max-h-96 overflow-y-auto rounded-sm border border-neutral-800 bg-neutral-900 lg:max-h-none lg:flex-1"
+	class="custom-scrollbar max-h-96 overflow-y-auto rounded-sm border border-neutral-800 bg-neutral-900 lg:max-h-none lg:min-h-0 lg:flex-1"
 >
 	<!-- Start position -->
 	<button

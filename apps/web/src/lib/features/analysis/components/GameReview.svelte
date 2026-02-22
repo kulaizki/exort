@@ -64,7 +64,7 @@
 	</div>
 {:else if result.tree}
 	{@const tree = result.tree}
-	<div class="flex flex-col gap-4 lg:flex-row lg:items-stretch lg:gap-6">
+	<div class="flex flex-col gap-4 lg:h-[560px] lg:flex-row lg:items-stretch lg:gap-6">
 		<!-- Eval bar (desktop only) -->
 		{#if hasEvals}
 			<div class="hidden shrink-0 lg:block">
@@ -97,8 +97,13 @@
 
 		<!-- Side panel -->
 		<div class="flex min-w-0 flex-1 flex-col gap-3 lg:overflow-hidden">
+			<MoveList
+				moves={tree.moves}
+				currentPly={tree.currentPly}
+				onSelectPly={tree.goToPly}
+			/>
 			<!-- Controls (desktop only) -->
-			<div class="hidden lg:block">
+			<div class="hidden justify-center lg:flex">
 				<BoardControls
 					canGoBack={tree.canGoBack}
 					canGoForward={tree.canGoForward}
@@ -109,11 +114,6 @@
 					onFlip={flipBoard}
 				/>
 			</div>
-			<MoveList
-				moves={tree.moves}
-				currentPly={tree.currentPly}
-				onSelectPly={tree.goToPly}
-			/>
 		</div>
 	</div>
 {/if}
