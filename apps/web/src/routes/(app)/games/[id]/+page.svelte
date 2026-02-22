@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { invalidateAll } from '$app/navigation';
 	import { GameReview } from '$lib/features/analysis';
 
 	let { data, form } = $props();
@@ -9,6 +10,13 @@
 	let analyzing = $state(false);
 	const hasAnalysis = $derived(!!game.analysisJob);
 	const analysisStatus = $derived(game.analysisJob?.status);
+	const isPending = $derived(analysisStatus === 'PENDING' || analysisStatus === 'PROCESSING');
+
+	$effect(() => {
+		if (!isPending) return;
+		const interval = setInterval(() => invalidateAll(), 5000);
+		return () => clearInterval(interval);
+	});
 
 	function formatDate(dateStr: string) {
 		return new Date(dateStr).toLocaleDateString('en-US', {
@@ -128,8 +136,10 @@
 			{:else if form?.analyzeError}
 				<p class="text-sm text-red-400">{form.analyzeError}</p>
 			{:else if hasAnalysis}
-				<p class="text-sm text-neutral-400">Analysis is {analysisStatus?.toLowerCase() ?? 'pending'}...</p>
-				<p class="mt-1 text-xs text-neutral-500">Refresh to check for results.</p>
+				<div class="flex items-center justify-center gap-2">
+					<svg class="h-3.5 w-3.5 animate-spin text-gold" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg>
+					<p class="text-sm text-neutral-400">Analysis is {analysisStatus?.toLowerCase() ?? 'pending'}...</p>
+				</div>
 			{:else}
 				<p class="text-sm text-neutral-400">This game hasn't been analyzed yet.</p>
 				<form method="post" action="?/analyze" use:enhance={() => {
@@ -137,6 +147,7 @@
 					return async ({ update }) => {
 						await update();
 						analyzing = false;
+						await invalidateAll();
 					};
 				}}>
 					<button

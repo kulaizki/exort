@@ -2,17 +2,41 @@
 	interface Props {
 		canGoBack: boolean;
 		canGoForward: boolean;
+		isPlaying: boolean;
 		onFirst: () => void;
 		onPrev: () => void;
 		onNext: () => void;
 		onLast: () => void;
 		onFlip: () => void;
+		onTogglePlay: () => void;
 	}
 
-	let { canGoBack, canGoForward, onFirst, onPrev, onNext, onLast, onFlip }: Props = $props();
+	let { canGoBack, canGoForward, isPlaying, onFirst, onPrev, onNext, onLast, onFlip, onTogglePlay }: Props = $props();
 </script>
 
 <div class="flex items-center gap-1">
+	<!-- Auto-play -->
+	<button
+		class="rounded-sm border border-neutral-800 bg-neutral-900 p-2 text-neutral-400 transition-colors hover:bg-neutral-800 hover:text-neutral-200 {isPlaying ? 'text-gold' : ''}"
+		onclick={onTogglePlay}
+		disabled={!canGoForward && !isPlaying}
+		aria-label={isPlaying ? 'Pause auto-play' : 'Auto-play moves'}
+	>
+		{#if isPlaying}
+			<svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+				<rect x="6" y="4" width="4" height="16" />
+				<rect x="14" y="4" width="4" height="16" />
+			</svg>
+		{:else}
+			<svg class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
+				<polygon points="6 3 20 12 6 21 6 3" />
+			</svg>
+		{/if}
+	</button>
+
+	<!-- Divider -->
+	<div class="mx-1 h-5 w-px bg-neutral-800"></div>
+
 	<!-- First move -->
 	<button
 		class="rounded-sm border border-neutral-800 bg-neutral-900 p-2 text-neutral-400 transition-colors hover:bg-neutral-800 hover:text-neutral-200 disabled:cursor-not-allowed disabled:opacity-30"

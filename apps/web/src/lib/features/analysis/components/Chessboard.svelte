@@ -93,15 +93,15 @@
 		height: 100%;
 	}
 
-	/* Dark-theme board — light squares as bg-color, dark squares via SVG overlay */
+	/* Board colors — matches Lichess brown theme */
 	.chessboard-wrap :global(cg-board) {
-		background-color: #6b6456;
-		background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOng9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIHZpZXdCb3g9IjAgMCA4IDgiIHNoYXBlLXJlbmRlcmluZz0iY3Jpc3BFZGdlcyI+PGcgaWQ9ImEiPjxnIGlkPSJiIj48ZyBpZD0iYyI+PGcgaWQ9ImQiPjxyZWN0IHdpZHRoPSIxIiBoZWlnaHQ9IjEiIGlkPSJlIiBvcGFjaXR5PSIwIi8+PHVzZSB4PSIxIiB5PSIxIiBocmVmPSIjZSIgeDpocmVmPSIjZSIvPjxyZWN0IHk9IjEiIHdpZHRoPSIxIiBoZWlnaHQ9IjEiIGlkPSJmIiBvcGFjaXR5PSIwLjM4Ii8+PHVzZSB4PSIxIiB5PSItMSIgaHJlZj0iI2YiIHg6aHJlZj0iI2YiLz48L2c+PHVzZSB4PSIyIiBocmVmPSIjZCIgeDpocmVmPSIjZCIvPjwvZz48dXNlIHg9IjQiIGhyZWY9IiNjIiB4OmhyZWY9IiNjIi8+PC9nPjx1c2UgeT0iMiIgaHJlZj0iI2IiIHg6aHJlZj0iI2IiLz48L2c+PHVzZSB5PSI0IiBocmVmPSIjYSIgeDpocmVmPSIjYSIvPjwvc3ZnPgo=');
+		background-color: #f0d9b5;
+		background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8' shape-rendering='crispEdges'%3E%3Cg id='a'%3E%3Cg id='b'%3E%3Cg id='c'%3E%3Cg id='d'%3E%3Crect width='1' height='1' fill='%23f0d9b5'/%3E%3Crect x='1' y='1' width='1' height='1' fill='%23f0d9b5'/%3E%3Crect y='1' width='1' height='1' fill='%23b58863'/%3E%3Crect x='1' width='1' height='1' fill='%23b58863'/%3E%3C/g%3E%3Cuse x='2' href='%23d'/%3E%3C/g%3E%3Cuse x='4' href='%23c'/%3E%3C/g%3E%3Cuse y='2' href='%23b'/%3E%3C/g%3E%3Cuse y='4' href='%23a'/%3E%3C/svg%3E");
 	}
 
-	/* Last-move highlight (gold tinted) */
+	/* Last-move highlight (Lichess yellow-green) */
 	.chessboard-wrap :global(cg-board square.last-move) {
-		background-color: rgba(255, 184, 0, 0.41) !important;
+		background-color: rgba(155, 199, 0, 0.41) !important;
 	}
 
 	/* Check highlight */
@@ -122,7 +122,7 @@
 
 	/* Coordinate labels */
 	.chessboard-wrap :global(.cg-wrap coords) {
-		color: #888;
+		color: #6b5839;
 		font-size: 10px;
 	}
 </style>

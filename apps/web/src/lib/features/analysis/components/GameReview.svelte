@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { untrack } from 'svelte';
 	import Chessboard from './Chessboard.svelte';
 	import EvalBar from './EvalBar.svelte';
 	import MoveList from './MoveList.svelte';
@@ -13,22 +14,69 @@
 
 	let { pgn, color, moveEvaluations }: Props = $props();
 
-	const result = $derived.by(() => {
-		try {
-			const tree = createGameTree(pgn, moveEvaluations);
-			return { tree, error: null } as const;
-		} catch (e) {
-			const message = e instanceof Error ? e.message : 'Failed to parse game';
-			return { tree: null, error: message } as const;
-		}
+	// Cache the tree so invalidateAll() doesn't recreate it when pgn content is unchanged
+	let lastPgn = '';
+	let lastEvalsJson = '';
+	let result = $state<{ tree: ReturnType<typeof createGameTree>; error: null } | { tree: null; error: string }>({ tree: null, error: 'Loading' });
+
+	$effect(() => {
+		const currentPgn = pgn;
+		const currentEvalsJson = JSON.stringify(moveEvaluations ?? []);
+		untrack(() => {
+			if (currentPgn === lastPgn && currentEvalsJson === lastEvalsJson) return;
+			lastPgn = currentPgn;
+			lastEvalsJson = currentEvalsJson;
+			try {
+				const tree = createGameTree(currentPgn, moveEvaluations);
+				result = { tree, error: null };
+			} catch (e) {
+				const message = e instanceof Error ? e.message : 'Failed to parse game';
+				result = { tree: null, error: message };
+			}
+		});
 	});
 
 	let flipped = $state(false);
+	let playing = $state(false);
 	const orientation = $derived<'white' | 'black'>(flipped ? (color === 'white' ? 'black' : 'white') : color);
 
 	function flipBoard() {
 		flipped = !flipped;
 	}
+
+	let playInterval: ReturnType<typeof setInterval> | null = null;
+
+	function startAutoPlay() {
+		stopAutoPlay();
+		playInterval = setInterval(() => {
+			const tree = result.tree;
+			if (tree && tree.canGoForward) {
+				tree.goForward();
+			} else {
+				playing = false;
+			}
+		}, 1000);
+	}
+
+	function stopAutoPlay() {
+		if (playInterval) {
+			clearInterval(playInterval);
+			playInterval = null;
+		}
+	}
+
+	function togglePlay() {
+		playing = !playing;
+		if (playing) {
+			startAutoPlay();
+		} else {
+			stopAutoPlay();
+		}
+	}
+
+	$effect(() => {
+		return () => stopAutoPlay();
+	});
 
 	const hasEvals = $derived(!!moveEvaluations?.length);
 
@@ -86,11 +134,13 @@
 				<BoardControls
 					canGoBack={tree.canGoBack}
 					canGoForward={tree.canGoForward}
+					isPlaying={playing}
 					onFirst={tree.goToStart}
 					onPrev={tree.goBack}
 					onNext={tree.goForward}
 					onLast={tree.goToEnd}
 					onFlip={flipBoard}
+					onTogglePlay={togglePlay}
 				/>
 			</div>
 		</div>
@@ -107,11 +157,13 @@
 				<BoardControls
 					canGoBack={tree.canGoBack}
 					canGoForward={tree.canGoForward}
+					isPlaying={playing}
 					onFirst={tree.goToStart}
 					onPrev={tree.goBack}
 					onNext={tree.goForward}
 					onLast={tree.goToEnd}
 					onFlip={flipBoard}
+					onTogglePlay={togglePlay}
 				/>
 			</div>
 		</div>
