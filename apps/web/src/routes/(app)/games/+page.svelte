@@ -6,14 +6,7 @@
 
 	let { data, form } = $props();
 	let syncing = $state(false);
-	let analyzing = $state(false);
-	let selectMode = $state(false);
-	let selected = $state<Set<string>>(new Set());
-	const unanalyzedOnPage = $derived(data.games.filter((g: { id: string; metrics: unknown }) => !g.metrics).map((g: { id: string }) => g.id));
-	const unanalyzedSelected = $derived([...selected].filter((id) => {
-		const game = data.games.find((g: { id: string }) => g.id === id);
-		return game && !game.metrics;
-	}));
+	let analyzingId = $state<string | null>(null);
 	const activeJobTotal = $derived(data.activeJobs.total);
 	const pendingCount = $derived(data.activeJobs.pending);
 	const processingCount = $derived(data.activeJobs.processing);
@@ -23,22 +16,6 @@
 		const interval = setInterval(() => invalidateAll(), 5000);
 		return () => clearInterval(interval);
 	});
-
-	function toggleGame(id: string) {
-		const next = new Set(selected);
-		if (next.has(id)) next.delete(id);
-		else next.add(id);
-		selected = next;
-	}
-
-	function selectAllUnanalyzed() {
-		selected = new Set(unanalyzedOnPage);
-	}
-
-	function exitSelectMode() {
-		selectMode = false;
-		selected = new Set();
-	}
 
 	function applyFilter(key: string, value: string) {
 		const params = new URLSearchParams(page.url.searchParams);
@@ -90,15 +67,6 @@
 			<p class="mt-1 text-sm text-neutral-500">{data.total} games synced</p>
 		</div>
 		<div class="flex items-center gap-2">
-			{#if !selectMode && data.games.length > 0 && unanalyzedOnPage.length > 0}
-				<button
-					onclick={() => selectMode = true}
-					class="inline-flex cursor-pointer items-center gap-2 rounded-sm border border-neutral-700 bg-neutral-800 px-3 py-1.5 text-xs font-medium text-neutral-200 transition-colors hover:bg-neutral-700"
-				>
-					<svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m16 12-4-4-4 4"/><path d="M12 16V8"/></svg>
-					Batch Analyze
-				</button>
-			{/if}
 			<form method="post" action="?/sync" use:enhance={() => {
 				syncing = true;
 				return async ({ update }) => {
@@ -133,7 +101,7 @@
 
 	{#if form?.analyzed}
 		<div class="rounded-sm border border-green-500/20 bg-green-500/10 px-4 py-2.5 text-sm text-green-400">
-			{form.count} game{form.count === 1 ? '' : 's'} queued for analysis.
+			Game queued for analysis.
 		</div>
 	{/if}
 
@@ -151,7 +119,7 @@
 				<span class="text-sm text-neutral-300">
 					Analyzing {activeJobTotal} game{activeJobTotal === 1 ? '' : 's'}
 					<span class="text-neutral-500">
-						({#if processingCount > 0}{processingCount} processing{/if}{#if processingCount > 0 && pendingCount > 0},{' '}{/if}{#if pendingCount > 0}{pendingCount} pending{/if})
+						({#if processingCount > 0}{processingCount} processing{/if}{#if processingCount > 0 && pendingCount > 0}, {/if}{#if pendingCount > 0}{pendingCount} pending{/if})
 					</span>
 				</span>
 			</div>
@@ -161,55 +129,6 @@
 			>
 				Refresh
 			</button>
-		</div>
-	{/if}
-
-	<!-- Selection mode bar -->
-	{#if selectMode}
-		<div class="flex items-center justify-between rounded-sm border border-gold/20 bg-gold/5 px-4 py-2.5">
-			<div class="flex items-center gap-3">
-				<span class="text-sm text-neutral-300">
-					{selected.size > 0 ? `${selected.size} selected` : 'Select games to analyze'}
-				</span>
-				{#if unanalyzedOnPage.length > 0}
-					<button
-						onclick={selectAllUnanalyzed}
-						class="cursor-pointer text-xs text-gold transition-colors hover:text-gold-light"
-					>
-						Select all unanalyzed ({unanalyzedOnPage.length})
-					</button>
-				{/if}
-			</div>
-			<div class="flex items-center gap-2">
-				<button
-					onclick={exitSelectMode}
-					class="cursor-pointer text-xs text-neutral-400 transition-colors hover:text-neutral-200"
-				>
-					Cancel
-				</button>
-				{#if unanalyzedSelected.length > 0}
-					<form method="post" action="?/analyze" use:enhance={() => {
-						analyzing = true;
-						return async ({ update }) => {
-							await update();
-							analyzing = false;
-							exitSelectMode();
-							await invalidateAll();
-						};
-					}}>
-						{#each unanalyzedSelected as id}
-							<input type="hidden" name="gameIds" value={id} />
-						{/each}
-						<button
-							type="submit"
-							disabled={analyzing}
-							class="inline-flex cursor-pointer items-center gap-1.5 rounded-sm bg-gold px-3 py-1.5 text-xs font-semibold text-neutral-950 transition-colors hover:bg-gold-light disabled:cursor-not-allowed disabled:opacity-50"
-						>
-							{analyzing ? 'Queuing...' : `Analyze ${unanalyzedSelected.length}`}
-						</button>
-					</form>
-				{/if}
-			</div>
 		</div>
 	{/if}
 
@@ -254,9 +173,6 @@
 			<table class="w-full text-sm">
 				<thead>
 					<tr class="border-b border-neutral-800 bg-neutral-900">
-						{#if selectMode}
-							<th class="w-10 px-3 py-2.5"></th>
-						{/if}
 						<th class="px-4 py-2.5 text-left text-xs font-medium text-neutral-500">Result</th>
 						<th class="px-4 py-2.5 text-left text-xs font-medium text-neutral-500">Opponent</th>
 						<th class="hidden px-4 py-2.5 text-left text-xs font-medium text-neutral-500 sm:table-cell">Time Control</th>
@@ -266,33 +182,11 @@
 					</tr>
 				</thead>
 				<tbody class="divide-y divide-neutral-800">
-					{#each data.games as game}
-						{@const isAnalyzed = !!game.metrics}
+					{#each data.games as game (game.id)}
 						<tr
-							class="bg-neutral-900/50 transition-colors {selectMode && isAnalyzed ? 'opacity-40 cursor-default' : 'cursor-pointer hover:bg-neutral-800/50'} {selectMode && selected.has(game.id) ? 'bg-gold/5' : ''}"
-							onclick={() => {
-								if (selectMode) {
-									if (!isAnalyzed) toggleGame(game.id);
-								} else {
-									goto(`/games/${game.id}`);
-								}
-							}}
+							class="cursor-pointer bg-neutral-900/50 transition-colors hover:bg-neutral-800/50"
+							onclick={() => goto(`/games/${game.id}`)}
 						>
-							{#if selectMode}
-								<td class="px-3 py-2.5">
-									{#if isAnalyzed}
-										<span class="text-xs text-neutral-600">--</span>
-									{:else}
-										<input
-											type="checkbox"
-											checked={selected.has(game.id)}
-											onchange={() => toggleGame(game.id)}
-											onclick={(e) => e.stopPropagation()}
-											class="cursor-pointer accent-gold"
-										/>
-									{/if}
-								</td>
-							{/if}
 							<td class="px-4 py-2.5">
 								<span class="inline-flex h-6 w-6 items-center justify-center rounded-sm text-xs font-bold
 									{game.result === 'win' ? 'bg-green-500/20 text-green-400' : game.result === 'loss' ? 'bg-red-500/20 text-red-400' : 'bg-neutral-700 text-neutral-400'}">
@@ -312,7 +206,24 @@
 								{:else if game.analysisJob?.status === 'FAILED'}
 									<span class="text-xs text-red-400">Failed</span>
 								{:else}
-									--
+									<form method="post" action="?/analyze" use:enhance={() => {
+										analyzingId = game.id;
+										return async ({ update }) => {
+											await update();
+											analyzingId = null;
+											await invalidateAll();
+										};
+									}}>
+										<input type="hidden" name="gameId" value={game.id} />
+										<button
+											type="submit"
+											disabled={analyzingId === game.id}
+											onclick={(e) => e.stopPropagation()}
+											class="cursor-pointer rounded-sm border border-gold/30 bg-gold/10 px-2 py-0.5 text-xs font-medium text-gold transition-colors hover:bg-gold/20 disabled:cursor-not-allowed disabled:opacity-50"
+										>
+											{analyzingId === game.id ? 'Queuing...' : 'Analyze'}
+										</button>
+									</form>
 								{/if}
 							</td>
 							<td class="hidden whitespace-nowrap px-4 py-2.5 text-right text-neutral-500 sm:table-cell">{formatDate(game.playedAt)}</td>
@@ -336,7 +247,7 @@
 						<svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
 					</a>
 
-					{#each getPageNumbers(data.page, data.totalPages) as p}
+					{#each getPageNumbers(data.page, data.totalPages) as p (p)}
 						{#if p === '...'}
 							<span class="px-1.5 text-xs text-neutral-600">...</span>
 						{:else}

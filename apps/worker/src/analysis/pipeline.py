@@ -5,7 +5,7 @@ import chess
 import chess.pgn
 from stockfish import Stockfish
 
-from src.config import ANALYSIS_DEPTH, STOCKFISH_PATH, STOCKFISH_THREADS, STOCKFISH_HASH_MB
+from src.config import ANALYSIS_NODES, ANALYSIS_DEPTH, STOCKFISH_PATH, STOCKFISH_THREADS, STOCKFISH_HASH_MB
 from src.analysis.classifier import classify_move
 from src.analysis.accuracy import calculate_accuracy
 from src.analysis.phase import aggregate_phase_errors
@@ -73,7 +73,7 @@ def analyze_game(pgn: str, game_id: str) -> AnalysisResult:
 
     sf = Stockfish(
         path=STOCKFISH_PATH,
-        depth=ANALYSIS_DEPTH,
+        depth=ANALYSIS_DEPTH if ANALYSIS_DEPTH > 0 else 18,
         parameters={"Threads": STOCKFISH_THREADS, "Hash": STOCKFISH_HASH_MB},
     )
 
@@ -89,15 +89,15 @@ def analyze_game(pgn: str, game_id: str) -> AnalysisResult:
         played_move = next_node.move
 
         sf.set_fen_position(board.fen())
-        top = sf.get_top_moves(1)
+        top = sf.get_top_moves(1, num_nodes=ANALYSIS_NODES)
         before_cp = _cp_from_top(top) or 0
         best_move_result = top[0]["Move"] if top else None
 
         board.push(played_move)
 
         sf.set_fen_position(board.fen())
-        after_info = sf.get_evaluation()
-        after_cp = _cp_from_info(after_info) or 0
+        after_top = sf.get_top_moves(1, num_nodes=ANALYSIS_NODES)
+        after_cp = _cp_from_top(after_top) or 0
 
         ply = next_node.ply()
         move_number = (ply + 1) // 2

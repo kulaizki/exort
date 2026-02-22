@@ -48,25 +48,21 @@ export const actions: Actions = {
 	analyze: async (event) => {
 		const token = event.locals.session!.token;
 		const formData = await event.request.formData();
-		const gameIds = formData.getAll('gameIds') as string[];
+		const gameId = formData.get('gameId') as string;
 
-		if (gameIds.length === 0) {
-			return fail(400, { analyzeError: 'No games selected' });
+		if (!gameId) {
+			return fail(400, { analyzeError: 'No game selected' });
 		}
 
-		if (gameIds.length > 50) {
-			return fail(400, { analyzeError: 'Maximum 50 games at a time' });
-		}
-
-		const res = await api('/analysis/batch-enqueue', token, {
+		const res = await api('/analysis/enqueue', token, {
 			method: 'POST',
-			body: JSON.stringify({ gameIds })
+			body: JSON.stringify({ gameId })
 		});
 
 		if (res.error) {
 			return fail(400, { analyzeError: res.error });
 		}
 
-		return { analyzed: true, count: res.data?.count ?? 0 };
+		return { analyzed: true, count: 1 };
 	}
 };
