@@ -7,7 +7,7 @@
 - **Sync:** Node.js + TypeScript — Lichess delta sync → Coolify VPS
 - **Worker:** Python + Stockfish 18 + chess library → Coolify VPS
 - **Database:** PostgreSQL 16 → Coolify VPS
-- **AI:** Vertex AI Gemini 2.5 Flash — structured SQL RAG (GCP)
+- **AI:** Gemini 2.5 Flash (Google AI) — structured SQL RAG
 
 ## Phase 1: Foundation ✅
 
@@ -247,7 +247,7 @@ Feature module: `$lib/features/coach/`. Route: `/coach`.
     - [ ] Trend aggregates (improvement/decline)
     - [ ] If game_id linked: full game metrics + move evaluations for that game
   - [ ] Build context payload (structured JSON)
-  - [ ] Call Vertex AI Gemini 2.5 Flash with system prompt + context + user question
+  - [ ] Call Gemini 2.5 Flash via Google AI API with system prompt + context + user question
   - [ ] System prompt: chess coach persona, reference metrics, give actionable advice
   - [ ] Store message + response in `chat_messages`
   - [ ] Return response (streaming preferred)
@@ -255,7 +255,7 @@ Feature module: `$lib/features/coach/`. Route: `/coach`.
 
 ## Phase 9: Deploy
 
-All services on Coolify VPS. Only Vertex AI on GCP.
+All services on Coolify VPS. No external cloud dependencies.
 
 - [x] Deploy `exort-postgres` on Coolify VPS:
   - [x] PostgreSQL 16 (postgres:16-alpine, strong password, persistent volume)
@@ -270,7 +270,7 @@ All services on Coolify VPS. Only Vertex AI on GCP.
   - [x] Domain: `exort.fitzsixto.com`
 - [x] Deploy `exort-api` on Coolify VPS:
   - [x] GitHub repo, Dockerfile build pack, base dir `/apps/api`
-  - [x] Environment variables (DATABASE_URL, VERTEX_AI config, CORS_ORIGIN, SYNC_SERVICE_URL, SYNC_SECRET)
+  - [x] Environment variables (DATABASE_URL, GEMINI_API_KEY, CORS_ORIGIN, SYNC_SERVICE_URL, SYNC_SECRET)
   - [x] Domain: `api.exort.fitzsixto.com`
 - [x] Deploy `exort-sync` on Coolify VPS:
   - [x] GitHub repo, Dockerfile build pack, base dir `/apps/sync`
@@ -352,7 +352,7 @@ Key issues resolved during Coolify deployment:
 - [x] **Postgres-backed job queue** — poll-based with `FOR UPDATE SKIP LOCKED`, no extra infra needed
 - [x] **Structured SQL RAG** — chess metrics are structured, not prose
 - [x] **Gemini 2.5 Flash** — long context, low latency, cost-effective
-- [x] **All-in-one VPS deploy** — all services on Coolify VPS, only Vertex AI on GCP
+- [x] **All-in-one VPS deploy** — all services on Coolify VPS, no external cloud dependencies
 
 - [x] **Shared `packages/db`** — single Prisma schema consumed by both `web` and `api`
 - [x] **Coolify** — self-hosted PaaS for all services (reverse proxy, SSL, GitHub webhook deploys)

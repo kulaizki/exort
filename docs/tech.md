@@ -7,7 +7,7 @@
 - **Sync:** Node.js + TypeScript — Lichess delta sync service (Coolify VPS)
 - **Worker:** Python + Stockfish 18 + chess library — CPU-bound analysis (Coolify VPS)
 - **Database:** PostgreSQL 16 (Coolify VPS)
-- **AI:** Vertex AI Gemini 2.5 Flash — structured RAG via SQL retrieval (GCP)
+- **AI:** Gemini 2.5 Flash (Google AI) — structured RAG via SQL retrieval
 
 ---
 
@@ -40,13 +40,13 @@ Responsibilities:
 - Core REST APIs (users, games, metrics, chat)
 - Prisma-based DB access (PostgreSQL on VPS)
 - Job orchestration (enqueue analysis jobs)
-- RAG endpoint — structured SQL retrieval + Vertex AI Gemini
+- RAG endpoint — structured SQL retrieval + Gemini API
 
 Stack:
 - Express 5 + TypeScript
 - Prisma ORM (schema-first, auto-generated typed client, managed migrations)
 - Zod (request validation)
-- Vertex AI SDK (@google-cloud/vertexai)
+- Google Generative AI SDK (@google/generative-ai)
 
 Key patterns:
 - Idempotent upserts using Lichess game ID
@@ -113,13 +113,13 @@ Flow:
    - Opening frequencies
    - Trend aggregates over time
 3. `api` builds a structured context payload
-4. `api` calls Vertex AI Gemini 2.5 Flash
+4. `api` calls Gemini 2.5 Flash via Google AI API
 5. Model returns coaching response (structured JSON + display-friendly text)
 
 Why Gemini 2.5 Flash:
 - Long context window for processing multiple retrieved documents
 - Low latency — suitable for interactive chat
-- Cost-effective on Vertex AI
+- Cost-effective via Gemini API (pay-per-use, generous free tier)
 
 Why structured SQL over vector embeddings:
 - Chess metrics are inherently structured (numbers, categories, timestamps)
@@ -131,7 +131,7 @@ Why structured SQL over vector embeddings:
 
 ## Deployment Model (All-in-One VPS)
 
-All services deployed on a single **Coolify VPS**. Only external dependency is GCP Vertex AI for RAG chat.
+All services deployed on a single **Coolify VPS**. No external cloud dependencies — AI coaching uses the Gemini API directly (API key auth).
 
 ### Coolify VPS
 
@@ -142,12 +142,6 @@ All services deployed on a single **Coolify VPS**. Only external dependency is G
 | `exort-sync` | (no domain — triggered by API) | Node.js sync service |
 | `exort-worker` | (no domain — polls DB) | Python + Stockfish 18 |
 | `exort-postgres` | (internal only) | PostgreSQL 16 |
-
-### GCP (Vertex AI only)
-
-| Service | Notes |
-|---------|-------|
-| Vertex AI Gemini 2.5 Flash | RAG chat — structured SQL retrieval + coaching response |
 
 Managed via **Coolify** (self-hosted PaaS):
 - One-click Postgres deploy with persistent volumes + backups
@@ -239,6 +233,6 @@ Patterns:
 - [x] **Postgres-backed job queue** — no extra infra, ACID transactional enqueue
 - [x] **Structured SQL RAG** — chess metrics are structured data, not prose
 - [x] **Gemini 2.5 Flash** — long context, low latency, cost-effective for chat
-- [x] **All-in-one VPS deploy** — all services on Coolify VPS, only Vertex AI on GCP
+- [x] **All-in-one VPS deploy** — all services on Coolify VPS, no external cloud dependencies
 
 - [x] **Coolify** — self-hosted PaaS for VPS management (all services, reverse proxy, SSL)

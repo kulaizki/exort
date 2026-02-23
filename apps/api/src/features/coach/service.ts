@@ -38,8 +38,8 @@ export class CoachService {
       data: { sessionId, role: 'USER', content }
     });
 
-    // TODO: Build context from game metrics, call Vertex AI Gemini
-    const aiResponse = 'AI coaching response placeholder — Vertex AI integration pending.';
+    // TODO: Build context from game metrics, call Gemini API
+    const aiResponse = 'AI coaching response placeholder — Gemini API integration pending.';
 
     const assistantMessage = await prisma.chatMessage.create({
       data: { sessionId, role: 'ASSISTANT', content: aiResponse }

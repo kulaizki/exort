@@ -8,10 +8,10 @@ Chess improvement platform — syncs Lichess games, analyzes with Stockfish, AI 
 
 - pnpm workspaces, `apps/*` + `packages/*`
 - `apps/web` — SvelteKit 2 + Svelte 5 + Tailwind 4 + Better Auth + Prisma 7
-- `apps/api` — Express + TypeScript + Prisma 7 (future)
-- `apps/sync` — Lichess delta sync (future)
-- `apps/worker` — Python + Stockfish 18 (future)
-- `packages/db` — shared Prisma schema + client (future)
+- `apps/api` — Express + TypeScript + Prisma 7
+- `apps/sync` — Lichess delta sync
+- `apps/worker` — Python + Stockfish 18
+- `packages/db` — shared Prisma schema + client
 
 ## Frontend Structure (apps/web)
 
@@ -71,7 +71,7 @@ src/
 │   │   └── service.ts
 │   ├── coach/
 │   │   ├── index.ts
-│   │   ├── router.ts      # CRUD sessions + messages, Vertex AI integration
+│   │   ├── router.ts      # CRUD sessions + messages, Gemini API integration
 │   │   ├── schema.ts
 │   │   └── service.ts
 │   ├── profile/

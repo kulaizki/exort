@@ -13,9 +13,9 @@ Chess improvement platform. Syncs games from Lichess, analyzes with Stockfish 18
 | **Sync** | Node.js + TypeScript — Lichess delta sync |
 | **Worker** | Python + Stockfish 18 — CPU-bound analysis |
 | **Database** | PostgreSQL 16 + Prisma Migrate (auto-deploy) |
-| **AI** | Vertex AI Gemini 2.5 Flash — structured SQL RAG |
+| **AI** | Gemini 2.5 Flash (Google AI) — structured SQL RAG |
 | **Charts** | Chart.js (SSR-safe via dynamic import) |
-| **Infra** | Coolify VPS (all services) + GCP (Vertex AI only) |
+| **Infra** | Coolify VPS (all services) |
 
 ## Architecture
 
@@ -27,7 +27,7 @@ User authenticates
   -> user clicks analyze on a game
   -> worker runs Stockfish, writes metrics
   -> dashboards display accuracy, blunders, openings, trends
-  -> coach chat: SQL retrieval + Vertex AI Gemini
+  -> coach chat: SQL retrieval + Gemini API
 ```
 
 ## Monorepo Structure
@@ -127,6 +127,7 @@ DATABASE_URL="postgres://exort:exort@localhost:5432/exort"
 PORT=3001
 CORS_ORIGIN="http://localhost:5173"
 BETTER_AUTH_SECRET="<shared-secret>"
+GEMINI_API_KEY="<your-gemini-api-key>"
 SYNC_SERVICE_URL="http://localhost:3002"
 SYNC_SECRET="<generate-with-openssl-rand>"
 ```
@@ -171,7 +172,7 @@ Production DB updates automatically on deploy. The API container runs `prisma mi
 
 ## Deployment
 
-All services deployed on a Coolify VPS with Docker. Each app has its own `Dockerfile` (3-stage: build, deps, runtime). Coolify handles reverse proxy (Traefik), SSL, and auto-deploy via GitHub webhooks. The API entrypoint runs `prisma migrate deploy` before starting, so schema changes auto-apply on deploy.
+All services deployed on a Coolify VPS with Docker. Each app has its own `Dockerfile` (3-stage: build, deps, runtime). Coolify handles reverse proxy (Traefik), SSL, and auto-deploy via GitHub webhooks. The API entrypoint runs `prisma migrate deploy` before starting, so schema changes auto-apply on deploy. No external cloud dependencies — AI coaching uses the Gemini API directly.
 
 | Service | Domain |
 |---------|--------|
