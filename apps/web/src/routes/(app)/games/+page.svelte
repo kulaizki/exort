@@ -60,6 +60,7 @@
 	<title>games — exort</title>
 </svelte:head>
 
+<div class="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:px-8">
 <div class="space-y-6">
 	<div class="flex items-center justify-between">
 		<div>
@@ -278,4 +279,5 @@
 			actionHref="/settings"
 		/>
 	{/if}
+</div>
 </div>

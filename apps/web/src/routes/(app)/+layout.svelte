@@ -29,8 +29,6 @@
 
 	<!-- Main content -->
 	<main class="lg:ml-56">
-		<div class="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:px-8">
-			{@render children()}
-		</div>
+		{@render children()}
 	</main>
 </div>

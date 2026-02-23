@@ -29,6 +29,7 @@
 	<title>vs {game.opponent} — exort</title>
 </svelte:head>
 
+<div class="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:px-8">
 <div class="space-y-6">
 	<!-- Back link -->
 	<a href="/games" class="inline-flex items-center gap-1.5 text-sm text-neutral-400 transition-colors hover:text-neutral-200">
@@ -171,4 +172,5 @@
 		<svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
 		Ask coach about this game
 	</a>
+</div>
 </div>
