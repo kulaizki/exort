@@ -35,5 +35,9 @@ vite.config.ts.timestamp-*
 # oh-my-claudecode
 .omc
 
+# Python
+__pycache__/
+*.pyc
+
 # Prisma
 **/generated/prisma
