@@ -81,8 +81,11 @@ export async function geminiChat(
 
         toolCalls.push({ name, args });
         const result = await executeToolCall(userId, name, args);
+
+        // Wrap arrays in an object — Gemini expects response to be Record<string, unknown>
+        const response = Array.isArray(result) ? { data: result } : result;
         responseParts.push({
-          functionResponse: { name, response: result as Record<string, unknown> }
+          functionResponse: { name, response: response as Record<string, unknown> }
         });
       }
 
