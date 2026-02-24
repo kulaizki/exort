@@ -92,12 +92,22 @@
 		messages = [...messages, { id: crypto.randomUUID(), role: 'USER', content, createdAt: new Date().toISOString() }];
 		scrollToBottom();
 
+		const isFirstMessage = messages.length === 1;
+
 		try {
 			const result = await callAction<{ assistantMessage: ChatMessage }>('sendMessage', { sessionId, content });
 
 			if (result?.assistantMessage) {
 				messages = [...messages, result.assistantMessage];
 				scrollToBottom();
+			}
+
+			// Refresh session list to pick up auto-generated title
+			if (isFirstMessage) {
+				setTimeout(async () => {
+					const res = await callAction<{ sessions: ChatSession[] }>('loadSessions');
+					if (res?.sessions) sessions = res.sessions;
+				}, 2000);
 			}
 		} catch {
 			messages = [...messages, { id: crypto.randomUUID(), role: 'ASSISTANT', content: 'Sorry, something went wrong. Please try again.', createdAt: new Date().toISOString() }];

@@ -18,7 +18,7 @@ export const actions: Actions = {
 
 		const res = await api('/chat/sessions', token, {
 			method: 'POST',
-			body: JSON.stringify({ title: title || 'New conversation' })
+			body: JSON.stringify({ title: title || undefined })
 		});
 
 		return { session: res.data };
@@ -32,6 +32,12 @@ export const actions: Actions = {
 		const res = await api(`/chat/sessions/${sessionId}/messages`, token);
 
 		return { messages: res.data ?? [] };
+	},
+
+	loadSessions: async (event) => {
+		const token = event.locals.session!.token;
+		const res = await api('/chat/sessions', token);
+		return { sessions: res.data ?? [] };
 	},
 
 	deleteSession: async (event) => {

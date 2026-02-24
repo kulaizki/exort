@@ -101,3 +101,18 @@ export async function geminiChat(
     toolCalls
   };
 }
+
+/** Generate a short title for a chat session based on the user's first message. */
+export async function generateTitle(userMessage: string): Promise<string> {
+  const ai = getClient();
+  const response = await ai.models.generateContent({
+    model: MODEL,
+    contents: userMessage,
+    config: {
+      systemInstruction:
+        'Generate a short title (max 6 words) for a chess coaching conversation that starts with this message. Return ONLY the title, no quotes, no punctuation at the end.',
+      maxOutputTokens: 30
+    }
+  });
+  return response.text?.trim() || 'New conversation';
+}

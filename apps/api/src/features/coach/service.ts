@@ -1,5 +1,5 @@
 import { prisma } from '../../lib/prisma.js';
-import { geminiChat } from './gemini.js';
+import { geminiChat, generateTitle } from './gemini.js';
 
 export class CoachService {
   static async createSession(userId: string, title?: string, gameId?: string) {
@@ -58,6 +58,13 @@ export class CoachService {
               : undefined
         }
       });
+
+      // Auto-generate title on first message (fire-and-forget)
+      if (history.length === 0 && !session.title) {
+        generateTitle(content)
+          .then((title) => prisma.chatSession.update({ where: { id: sessionId }, data: { title } }))
+          .catch(() => {});
+      }
 
       return { userMessage, assistantMessage };
     } catch (err) {
