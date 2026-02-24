@@ -1,20 +1,20 @@
 <script lang="ts">
 	import { tick } from 'svelte';
 	import { deserialize } from '$app/forms';
+	import { Markdown, ThinkingIndicator } from '$lib/features/coach';
 
 	let { data } = $props();
 
 	type ChatMessage = { id: string; role: 'USER' | 'ASSISTANT'; content: string; createdAt: string };
 	type ChatSession = { id: string; title?: string; createdAt: string; messages?: ChatMessage[] };
 
-	const initialSessions = data.sessions ?? [];
-	let sessions = $state<ChatSession[]>(initialSessions);
+	let sessions = $state<ChatSession[]>(data.sessions ?? []);
 	let activeSessionId = $state<string | null>(null);
 	let messages = $state<ChatMessage[]>([]);
 	let input = $state('');
 	let loading = $state(false);
 	let showSessions = $state(false);
-	let messagesEnd: HTMLDivElement;
+	let messagesEnd = $state<HTMLDivElement>();
 	let textareaEl: HTMLTextAreaElement;
 
 	async function callAction<T = Record<string, unknown>>(action: string, fields: Record<string, string> = {}): Promise<T | null> {
@@ -220,7 +220,11 @@
 										class="rounded-sm px-4 py-3 text-sm
 											{isUser ? 'bg-gold/10 text-neutral-200' : 'border border-neutral-800 bg-neutral-900 text-neutral-300'}"
 									>
-										<p class="whitespace-pre-wrap leading-relaxed">{msg.content}</p>
+										{#if isUser}
+											<p class="whitespace-pre-wrap leading-relaxed">{msg.content}</p>
+										{:else}
+											<Markdown content={msg.content} />
+										{/if}
 									</div>
 								</div>
 							</div>
@@ -234,11 +238,7 @@
 								<div class="space-y-1">
 									<span class="text-xs font-medium text-neutral-500">Coach</span>
 									<div class="rounded-sm border border-neutral-800 bg-neutral-900 px-4 py-3">
-										<div class="flex gap-1.5">
-											<span class="h-2 w-2 animate-bounce rounded-full bg-neutral-500" style="animation-delay: 0ms"></span>
-											<span class="h-2 w-2 animate-bounce rounded-full bg-neutral-500" style="animation-delay: 150ms"></span>
-											<span class="h-2 w-2 animate-bounce rounded-full bg-neutral-500" style="animation-delay: 300ms"></span>
-										</div>
+										<ThinkingIndicator />
 									</div>
 								</div>
 							</div>
