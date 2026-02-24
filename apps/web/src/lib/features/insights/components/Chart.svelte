@@ -76,27 +76,34 @@
 		let destroyed = false;
 		let localChart: ChartJS | undefined;
 
-		import('chart.js').then(
-			({
-				Chart,
-				CategoryScale,
-				LinearScale,
-				PointElement,
-				LineElement,
-				LineController,
-				BarElement,
-				BarController,
-				ArcElement,
-				DoughnutController,
-				Filler,
-				Tooltip,
-				Legend
-			}) => {
+		Promise.all([
+			import('chart.js'),
+			import('chartjs-adapter-date-fns')
+		]).then(
+			([
+				{
+					Chart,
+					CategoryScale,
+					LinearScale,
+					TimeScale,
+					PointElement,
+					LineElement,
+					LineController,
+					BarElement,
+					BarController,
+					ArcElement,
+					DoughnutController,
+					Filler,
+					Tooltip,
+					Legend
+				}
+			]) => {
 				if (destroyed) return;
 
 				Chart.register(
 					CategoryScale,
 					LinearScale,
+					TimeScale,
 					PointElement,
 					LineElement,
 					LineController,
