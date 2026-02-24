@@ -83,8 +83,11 @@
 				LinearScale,
 				PointElement,
 				LineElement,
+				LineController,
 				BarElement,
+				BarController,
 				ArcElement,
+				DoughnutController,
 				Filler,
 				Tooltip,
 				Legend
@@ -96,8 +99,11 @@
 					LinearScale,
 					PointElement,
 					LineElement,
+					LineController,
 					BarElement,
+					BarController,
 					ArcElement,
+					DoughnutController,
 					Filler,
 					Tooltip,
 					Legend
