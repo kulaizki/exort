@@ -51,6 +51,38 @@ coachRouter.get('/sessions/:id/messages', async (req, res, next) => {
   }
 });
 
+coachRouter.post('/sessions/:id/messages/stream', async (req, res, next) => {
+  try {
+    const { id } = sessionIdParam.parse(req.params);
+    const { content } = sendMessageBody.parse(req.body);
+
+    res.writeHead(200, {
+      'Content-Type': 'text/event-stream',
+      'Cache-Control': 'no-cache',
+      Connection: 'keep-alive'
+    });
+
+    const result = await CoachService.sendMessageStream(id, req.userId!, content, (event) => {
+      res.write(`data: ${JSON.stringify(event)}\n\n`);
+    });
+
+    if (!result) {
+      res.write(`data: ${JSON.stringify({ type: 'error', message: 'Session not found' })}\n\n`);
+    }
+
+    res.write('data: [DONE]\n\n');
+    res.end();
+  } catch (err) {
+    if (!res.headersSent) {
+      next(err);
+    } else {
+      res.write(`data: ${JSON.stringify({ type: 'error', message: 'An error occurred' })}\n\n`);
+      res.write('data: [DONE]\n\n');
+      res.end();
+    }
+  }
+});
+
 coachRouter.post('/sessions/:id/messages', async (req, res, next) => {
   try {
     const { id } = sessionIdParam.parse(req.params);

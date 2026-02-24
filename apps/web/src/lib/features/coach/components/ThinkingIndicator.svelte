@@ -1,15 +1,18 @@
 <script lang="ts">
-  const steps = [
+  const defaultSteps = [
     'Analyzing your games...',
     'Looking at performance data...',
     'Preparing coaching insights...'
   ];
 
+  let { label }: { label?: string | null } = $props();
+
   let currentStep = $state(0);
 
   $effect(() => {
+    if (label) return;
     const interval = setInterval(() => {
-      currentStep = (currentStep + 1) % steps.length;
+      currentStep = (currentStep + 1) % defaultSteps.length;
     }, 3000);
     return () => clearInterval(interval);
   });
@@ -20,5 +23,5 @@
     <circle cx="12" cy="12" r="10" stroke-opacity="0.25" />
     <path d="M12 2a10 10 0 0 1 10 10" stroke-linecap="round" />
   </svg>
-  <span class="transition-opacity duration-300">{steps[currentStep]}</span>
+  <span>{label || defaultSteps[currentStep]}</span>
 </div>

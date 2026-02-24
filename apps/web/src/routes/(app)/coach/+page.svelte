@@ -17,6 +17,10 @@
 	let messagesEnd = $state<HTMLDivElement>();
 	let textareaEl: HTMLTextAreaElement;
 
+	// Streaming state
+	let streamingMessageId = $state<string | null>(null);
+	let activeToolCall = $state<string | null>(null);
+
 	async function callAction<T = Record<string, unknown>>(action: string, fields: Record<string, string> = {}): Promise<T | null> {
 		const formData = new FormData();
 		for (const [key, value] of Object.entries(fields)) {
@@ -89,31 +93,83 @@
 			return;
 		}
 
+		// Add user message
 		messages = [...messages, { id: crypto.randomUUID(), role: 'USER', content, createdAt: new Date().toISOString() }];
 		scrollToBottom();
 
 		const isFirstMessage = messages.length === 1;
 
+		// Add empty assistant message for streaming
+		const assistantId = crypto.randomUUID();
+		messages = [...messages, { id: assistantId, role: 'ASSISTANT', content: '', createdAt: new Date().toISOString() }];
+		streamingMessageId = assistantId;
+		scrollToBottom();
+
 		try {
-			const result = await callAction<{ assistantMessage: ChatMessage }>('sendMessage', { sessionId, content });
+			const response = await fetch('/coach/stream', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ sessionId, content })
+			});
 
-			if (result?.assistantMessage) {
-				messages = [...messages, result.assistantMessage];
-				scrollToBottom();
+			if (!response.ok || !response.body) throw new Error('Stream failed');
+
+			const reader = response.body.getReader();
+			const decoder = new TextDecoder();
+			let buffer = '';
+
+			while (true) {
+				const { done, value } = await reader.read();
+				if (done) break;
+
+				buffer += decoder.decode(value, { stream: true });
+				const lines = buffer.split('\n');
+				buffer = lines.pop()!;
+
+				for (const line of lines) {
+					if (!line.startsWith('data: ')) continue;
+					const raw = line.slice(6);
+					if (raw === '[DONE]') continue;
+
+					try {
+						const event = JSON.parse(raw);
+
+						if (event.type === 'text') {
+							messages = messages.map((m) =>
+								m.id === assistantId
+									? { ...m, content: m.content + event.content }
+									: m
+							);
+							activeToolCall = null;
+							scrollToBottom();
+						} else if (event.type === 'tool_call') {
+							activeToolCall = event.label;
+						} else if (event.type === 'tool_result') {
+							activeToolCall = null;
+						}
+					} catch {
+						// skip malformed events
+					}
+				}
 			}
+		} catch {
+			messages = messages.map((m) =>
+				m.id === assistantId
+					? { ...m, content: m.content || 'Sorry, something went wrong. Please try again.' }
+					: m
+			);
+		} finally {
+			loading = false;
+			streamingMessageId = null;
+			activeToolCall = null;
 
-			// Refresh session list to pick up auto-generated title
+			// Refresh sessions for auto-generated title
 			if (isFirstMessage) {
 				setTimeout(async () => {
 					const res = await callAction<{ sessions: ChatSession[] }>('loadSessions');
 					if (res?.sessions) sessions = res.sessions;
 				}, 2000);
 			}
-		} catch {
-			messages = [...messages, { id: crypto.randomUUID(), role: 'ASSISTANT', content: 'Sorry, something went wrong. Please try again.', createdAt: new Date().toISOString() }];
-			scrollToBottom();
-		} finally {
-			loading = false;
 		}
 	}
 
@@ -209,6 +265,7 @@
 					<div class="space-y-6">
 						{#each messages as msg (msg.id)}
 							{@const isUser = msg.role === 'USER'}
+							{@const isStreaming = msg.id === streamingMessageId}
 							<div class="flex gap-3 {isUser ? 'flex-row-reverse' : 'flex-row'}">
 								<div
 									class="flex h-8 w-8 shrink-0 items-center justify-center rounded-sm
@@ -232,6 +289,11 @@
 									>
 										{#if isUser}
 											<p class="whitespace-pre-wrap leading-relaxed">{msg.content}</p>
+										{:else if isStreaming && !msg.content}
+											<ThinkingIndicator label={activeToolCall} />
+										{:else if isStreaming}
+											<Markdown content={msg.content} />
+											<span class="ml-0.5 inline-block h-4 w-1.5 animate-pulse bg-gold/60"></span>
 										{:else}
 											<Markdown content={msg.content} />
 										{/if}
@@ -239,20 +301,6 @@
 								</div>
 							</div>
 						{/each}
-
-						{#if loading}
-							<div class="flex gap-3">
-								<div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-sm bg-neutral-800">
-									<svg class="h-4 w-4 text-gold" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-								</div>
-								<div class="space-y-1">
-									<span class="text-xs font-medium text-neutral-500">Coach</span>
-									<div class="rounded-sm border border-neutral-800 bg-neutral-900 px-4 py-3">
-										<ThinkingIndicator />
-									</div>
-								</div>
-							</div>
-						{/if}
 
 						<div bind:this={messagesEnd}></div>
 					</div>

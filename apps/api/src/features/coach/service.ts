@@ -1,5 +1,5 @@
 import { prisma } from '../../lib/prisma.js';
-import { geminiChat, generateTitle } from './gemini.js';
+import { geminiChat, geminiChatStream, generateTitle, type StreamEvent } from './gemini.js';
 
 export class CoachService {
   static async createSession(userId: string, title?: string, gameId?: string) {
@@ -81,5 +81,61 @@ export class CoachService {
 
       return { userMessage, assistantMessage };
     }
+  }
+
+  static async sendMessageStream(
+    sessionId: string,
+    userId: string,
+    content: string,
+    write: (event: StreamEvent) => void
+  ) {
+    const session = await prisma.chatSession.findFirst({ where: { id: sessionId, userId } });
+    if (!session) return null;
+
+    await prisma.chatMessage.create({
+      data: { sessionId, role: 'USER', content }
+    });
+
+    const history = await prisma.chatMessage.findMany({
+      where: { sessionId },
+      orderBy: { createdAt: 'asc' }
+    });
+    // Exclude the user message we just created (it's the last one)
+    const previousMessages = history.slice(0, -1);
+
+    let fullText = '';
+    const toolCalls: { name: string; label: string }[] = [];
+
+    try {
+      for await (const event of geminiChatStream(userId, content, previousMessages, session.gameId)) {
+        write(event);
+        if (event.type === 'text') fullText += event.content;
+        if (event.type === 'tool_call') toolCalls.push({ name: event.name, label: event.label });
+      }
+    } catch (err) {
+      console.error('Gemini stream error:', err);
+      if (!fullText) {
+        fullText = 'I encountered an error while processing your request. Please try again in a moment.';
+        write({ type: 'text', content: fullText });
+      }
+    }
+
+    await prisma.chatMessage.create({
+      data: {
+        sessionId,
+        role: 'ASSISTANT',
+        content: fullText || 'No response generated.',
+        context: toolCalls.length > 0 ? (JSON.parse(JSON.stringify(toolCalls)) as object[]) : undefined
+      }
+    });
+
+    // Auto-generate title on first message
+    if (previousMessages.length === 0 && !session.title) {
+      generateTitle(content)
+        .then((title) => prisma.chatSession.update({ where: { id: sessionId }, data: { title } }))
+        .catch(() => {});
+    }
+
+    return { ok: true };
   }
 }
