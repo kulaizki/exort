@@ -209,7 +209,7 @@
 	<!-- Chat area -->
 	<div class="flex flex-1 flex-col">
 		<!-- Chat header -->
-		<div class="flex shrink-0 items-center justify-between border-b border-neutral-800 px-4 py-2.5">
+		<div class="flex shrink-0 items-center justify-between px-4 py-2.5">
 			<div class="flex items-center gap-2">
 				<svg class="h-4 w-4 text-gold" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
 				<span class="text-sm font-medium text-neutral-200">Coach</span>
@@ -348,9 +348,12 @@
 	</div>
 
 	<!-- Session panel (right side) -->
-	{#if showSessions}
-		<div class="flex w-full shrink-0 flex-col border-l border-neutral-800 bg-neutral-950 lg:w-72">
-			<div class="flex items-center justify-between border-b border-neutral-800 p-3">
+	<div
+		class="shrink-0 overflow-hidden border-l border-neutral-800 transition-[width] duration-300 ease-in-out
+			{showSessions ? 'w-full lg:w-72' : 'w-0 border-l-0'}"
+	>
+		<div class="flex h-full w-full flex-col bg-neutral-950 lg:w-72">
+			<div class="flex items-center justify-between p-3">
 				<p class="text-xs font-medium uppercase tracking-wider text-neutral-500">History</p>
 				<button
 					onclick={() => (showSessions = false)}
@@ -391,5 +394,5 @@
 				</div>
 			</div>
 		</div>
-	{/if}
+	</div>
 </div>

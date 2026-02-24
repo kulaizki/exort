@@ -1,6 +1,11 @@
 import { prisma } from '../../lib/prisma.js';
 import { geminiChat, geminiChatStream, generateTitle, type StreamEvent } from './gemini.js';
 
+async function getLichessUsername(userId: string): Promise<string | null> {
+  const account = await prisma.lichessAccount.findUnique({ where: { userId }, select: { lichessUsername: true } });
+  return account?.lichessUsername ?? null;
+}
+
 export class CoachService {
   static async createSession(userId: string, title?: string, gameId?: string) {
     return prisma.chatSession.create({
@@ -40,12 +45,15 @@ export class CoachService {
     });
 
     try {
-      const history = await prisma.chatMessage.findMany({
-        where: { sessionId, id: { not: userMessage.id } },
-        orderBy: { createdAt: 'asc' }
-      });
+      const [history, lichessUsername] = await Promise.all([
+        prisma.chatMessage.findMany({
+          where: { sessionId, id: { not: userMessage.id } },
+          orderBy: { createdAt: 'asc' }
+        }),
+        getLichessUsername(userId)
+      ]);
 
-      const result = await geminiChat(userId, content, history, session.gameId);
+      const result = await geminiChat(userId, content, history, session.gameId, lichessUsername);
 
       const assistantMessage = await prisma.chatMessage.create({
         data: {
@@ -96,10 +104,13 @@ export class CoachService {
       data: { sessionId, role: 'USER', content }
     });
 
-    const history = await prisma.chatMessage.findMany({
-      where: { sessionId },
-      orderBy: { createdAt: 'asc' }
-    });
+    const [history, lichessUsername] = await Promise.all([
+      prisma.chatMessage.findMany({
+        where: { sessionId },
+        orderBy: { createdAt: 'asc' }
+      }),
+      getLichessUsername(userId)
+    ]);
     // Exclude the user message we just created (it's the last one)
     const previousMessages = history.slice(0, -1);
 
@@ -107,7 +118,7 @@ export class CoachService {
     const toolCalls: { name: string; label: string }[] = [];
 
     try {
-      for await (const event of geminiChatStream(userId, content, previousMessages, session.gameId)) {
+      for await (const event of geminiChatStream(userId, content, previousMessages, session.gameId, lichessUsername)) {
         write(event);
         if (event.type === 'text') fullText += event.content;
         if (event.type === 'tool_call') toolCalls.push({ name: event.name, label: event.label });

@@ -8,7 +8,7 @@ import type { ChatMessage } from "@exort/db";
 import { config } from "../../config/index.js";
 import { coachTools } from "./tools.js";
 import { executeToolCall } from "./handlers.js";
-import { buildSystemPrompt } from "./prompt.js";
+import { buildSystemPrompt, type PromptContext } from "./prompt.js";
 
 const MAX_ROUNDS = 5;
 const MODEL = "gemini-2.5-flash";
@@ -41,9 +41,11 @@ export async function geminiChat(
   userMessage: string,
   history: ChatMessage[],
   gameId?: string | null,
+  lichessUsername?: string | null,
 ): Promise<GeminiResult> {
   const ai = getClient();
   const toolCalls: ToolCallLog[] = [];
+  const promptCtx: PromptContext = { gameId, lichessUsername };
 
   // Build conversation contents: history + current user message
   const contents: Content[] = [
@@ -56,7 +58,7 @@ export async function geminiChat(
       model: MODEL,
       contents,
       config: {
-        systemInstruction: buildSystemPrompt(gameId),
+        systemInstruction: buildSystemPrompt(promptCtx),
         tools: [{ functionDeclarations: coachTools }],
         toolConfig: {
           functionCallingConfig: { mode: FunctionCallingConfigMode.AUTO },
@@ -138,6 +140,7 @@ export async function* geminiChatStream(
   userMessage: string,
   history: ChatMessage[],
   gameId?: string | null,
+  lichessUsername?: string | null,
 ): AsyncGenerator<StreamEvent> {
   const ai = getClient();
 
@@ -147,7 +150,7 @@ export async function* geminiChatStream(
   ];
 
   const requestConfig = {
-    systemInstruction: buildSystemPrompt(gameId),
+    systemInstruction: buildSystemPrompt({ gameId, lichessUsername }),
     tools: [{ functionDeclarations: coachTools }],
     toolConfig: {
       functionCallingConfig: { mode: FunctionCallingConfigMode.AUTO },
