@@ -12,6 +12,11 @@ export const auth = building ? (null as unknown as ReturnType<typeof betterAuth>
 	secret: env.BETTER_AUTH_SECRET,
 	database: prismaAdapter(prisma, { provider: 'postgresql' }),
 	emailAndPassword: { enabled: true },
+	rateLimit: {
+		customRules: {
+			'/get-session': false
+		}
+	},
 	databaseHooks: {
 		account: {
 			create: {

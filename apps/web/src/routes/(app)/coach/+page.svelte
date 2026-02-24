@@ -349,7 +349,7 @@
 
 	<!-- Session panel (right side) -->
 	{#if showSessions}
-		<div class="flex w-full shrink-0 flex-col border-l border-neutral-800 bg-neutral-950 lg:w-56">
+		<div class="flex w-full shrink-0 flex-col border-l border-neutral-800 bg-neutral-950 lg:w-72">
 			<div class="flex items-center justify-between border-b border-neutral-800 p-3">
 				<p class="text-xs font-medium uppercase tracking-wider text-neutral-500">History</p>
 				<button
