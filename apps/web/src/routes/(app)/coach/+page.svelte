@@ -171,7 +171,7 @@
 
 		<!-- Messages -->
 		<div class="custom-scrollbar flex-1 overflow-y-auto">
-			<div class="mx-auto max-w-3xl px-4 py-6">
+			<div class="mx-auto max-w-4xl px-4 py-6">
 				{#if messages.length === 0}
 					<!-- Empty state -->
 					<div class="flex flex-col items-center justify-center pt-[15vh] text-center">
@@ -211,7 +211,7 @@
 									{/if}
 								</div>
 
-								<div class="max-w-[85%] space-y-1 {isUser ? 'flex flex-col items-end' : ''}">
+								<div class="space-y-1 {isUser ? 'flex max-w-[85%] flex-col items-end' : 'min-w-0 max-w-[90%]'}">
 									<div class="flex items-center gap-2">
 										<span class="text-xs font-medium text-neutral-500">{isUser ? 'You' : 'Coach'}</span>
 										<span class="text-xs text-neutral-600">{formatTime(msg.createdAt)}</span>
@@ -252,7 +252,7 @@
 
 		<!-- Input area (always visible) -->
 		<div class="shrink-0 border-t border-neutral-800">
-			<div class="mx-auto max-w-3xl px-4 pt-3">
+			<div class="mx-auto max-w-4xl px-4 pt-3">
 				<form
 					onsubmit={(e) => {
 						e.preventDefault();

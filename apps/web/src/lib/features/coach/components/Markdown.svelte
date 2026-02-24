@@ -3,7 +3,13 @@
 
   let { content }: { content: string } = $props();
 
-  marked.setOptions({ breaks: true, gfm: true });
+  const renderer = new marked.Renderer();
+  const originalTable = renderer.table.bind(renderer);
+  renderer.table = function (token) {
+    return `<div class="table-wrapper">${originalTable(token)}</div>`;
+  };
+
+  marked.setOptions({ breaks: true, gfm: true, renderer });
 
   let html = $derived(marked.parse(content) as string);
 </script>
@@ -78,11 +84,16 @@
     color: #d4d4d4;
   }
 
+  .markdown-content :global(.table-wrapper) {
+    overflow-x: auto;
+    margin-bottom: 0.75rem;
+  }
+
   .markdown-content :global(table) {
     width: 100%;
     border-collapse: collapse;
-    margin-bottom: 0.75rem;
     font-size: 0.8125rem;
+    white-space: nowrap;
   }
 
   .markdown-content :global(th) {
