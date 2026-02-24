@@ -11,6 +11,7 @@
 	const hasAnalysis = $derived(!!game.analysisJob);
 	const analysisStatus = $derived(game.analysisJob?.status);
 	const isPending = $derived(analysisStatus === 'PENDING' || analysisStatus === 'PROCESSING');
+	const isFailed = $derived(analysisStatus === 'FAILED');
 
 	$effect(() => {
 		if (!isPending) return;
@@ -136,6 +137,24 @@
 				<p class="text-sm text-green-400">Analysis queued. The Stockfish worker will process this game shortly.</p>
 			{:else if form?.analyzeError}
 				<p class="text-sm text-red-400">{form.analyzeError}</p>
+			{:else if isFailed}
+				<p class="text-sm text-red-400">Analysis failed. The Stockfish worker encountered an error processing this game.</p>
+				<form method="post" action="?/analyze" use:enhance={() => {
+					analyzing = true;
+					return async ({ update }) => {
+						await update();
+						analyzing = false;
+						await invalidateAll();
+					};
+				}}>
+					<button
+						type="submit"
+						disabled={analyzing}
+						class="mt-3 inline-flex cursor-pointer items-center gap-2 rounded-sm bg-gold px-3 py-1.5 text-xs font-semibold text-neutral-950 transition-colors hover:bg-gold-light disabled:cursor-not-allowed disabled:opacity-50"
+					>
+						{analyzing ? 'Queuing...' : 'Retry Analysis'}
+					</button>
+				</form>
 			{:else if hasAnalysis}
 				<div class="flex items-center justify-center gap-2">
 					<svg class="h-3.5 w-3.5 animate-spin text-gold" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg>

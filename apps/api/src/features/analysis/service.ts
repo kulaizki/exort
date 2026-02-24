@@ -6,7 +6,15 @@ export class AnalysisService {
     if (!game) return null;
 
     const existing = await prisma.analysisJob.findUnique({ where: { gameId } });
-    if (existing) return existing;
+    if (existing) {
+      if (existing.status === 'FAILED') {
+        return prisma.analysisJob.update({
+          where: { gameId },
+          data: { status: 'PENDING', startedAt: null, completedAt: null }
+        });
+      }
+      return existing;
+    }
 
     return prisma.analysisJob.create({
       data: { gameId }
