@@ -1,4 +1,5 @@
 import { prisma } from '../../lib/prisma.js';
+import { geminiChat } from './gemini.js';
 
 export class CoachService {
   static async createSession(userId: string, title?: string, gameId?: string) {
@@ -38,13 +39,40 @@ export class CoachService {
       data: { sessionId, role: 'USER', content }
     });
 
-    // TODO: Build context from game metrics, call Gemini API
-    const aiResponse = 'AI coaching response placeholder — Gemini API integration pending.';
+    try {
+      const history = await prisma.chatMessage.findMany({
+        where: { sessionId, id: { not: userMessage.id } },
+        orderBy: { createdAt: 'asc' }
+      });
 
-    const assistantMessage = await prisma.chatMessage.create({
-      data: { sessionId, role: 'ASSISTANT', content: aiResponse }
-    });
+      const result = await geminiChat(userId, content, history, session.gameId);
 
-    return { userMessage, assistantMessage };
+      const assistantMessage = await prisma.chatMessage.create({
+        data: {
+          sessionId,
+          role: 'ASSISTANT',
+          content: result.text,
+          context:
+            result.toolCalls.length > 0
+              ? (JSON.parse(JSON.stringify(result.toolCalls)) as object[])
+              : undefined
+        }
+      });
+
+      return { userMessage, assistantMessage };
+    } catch (err) {
+      console.error('Gemini chat error:', err);
+
+      const assistantMessage = await prisma.chatMessage.create({
+        data: {
+          sessionId,
+          role: 'ASSISTANT',
+          content:
+            'I encountered an error while processing your request. Please try again in a moment.'
+        }
+      });
+
+      return { userMessage, assistantMessage };
+    }
   }
 }
