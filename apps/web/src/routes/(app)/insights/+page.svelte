@@ -11,7 +11,11 @@
 	let { data } = $props();
 	const summary = $derived(data.summary);
 	const trends = $derived(data.trends);
-	const hasData = $derived(summary && (summary.analyzedGames ?? 0) > 0);
+	const hasGames = $derived(summary && (summary.totalGames ?? 0) > 0);
+	const hasAnalysis = $derived(summary && (summary.analyzedGames ?? 0) > 0);
+	const analyzedTrends = $derived(
+		trends?.filter((t: any) => t.accuracy != null) ?? []
+	);
 	const winRate = $derived(
 		summary?.resultDistribution
 			? Math.round(
@@ -39,25 +43,55 @@
 			<p class="mt-1 text-sm text-neutral-500">Understand your strengths and weaknesses</p>
 		</div>
 
-		{#if hasData}
+		{#if hasGames}
 			<!-- Stat cards -->
 			<div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
-				<div class="rounded-sm border border-neutral-800 bg-neutral-900 p-4">
-					<p class="text-xs font-medium text-neutral-500">Accuracy</p>
-					<p class="mt-1 text-2xl font-bold text-gold">
-						{summary.avgAccuracy?.toFixed(1) ?? '--'}%
-					</p>
-				</div>
-				<div class="rounded-sm border border-neutral-800 bg-neutral-900 p-4">
-					<p class="text-xs font-medium text-neutral-500">Centipawn Loss</p>
-					<p class="mt-1 text-2xl font-bold text-neutral-200">
-						{summary.avgCentipawnLoss?.toFixed(0) ?? '--'}
-					</p>
-				</div>
-				<div class="rounded-sm border border-neutral-800 bg-neutral-900 p-4">
-					<p class="text-xs font-medium text-neutral-500">Games Analyzed</p>
-					<p class="mt-1 text-2xl font-bold text-neutral-200">{summary.analyzedGames ?? 0}</p>
-				</div>
+				{#if hasAnalysis}
+					<div class="rounded-sm border border-neutral-800 bg-neutral-900 p-4">
+						<p class="text-xs font-medium text-neutral-500">Accuracy</p>
+						<p class="mt-1 text-2xl font-bold text-gold">
+							{summary.avgAccuracy?.toFixed(1) ?? '--'}%
+						</p>
+					</div>
+					<div class="rounded-sm border border-neutral-800 bg-neutral-900 p-4">
+						<p class="text-xs font-medium text-neutral-500">Centipawn Loss</p>
+						<p class="mt-1 text-2xl font-bold text-neutral-200">
+							{summary.avgCentipawnLoss?.toFixed(0) ?? '--'}
+						</p>
+					</div>
+				{:else}
+					<div class="rounded-sm border border-neutral-800 bg-neutral-900 p-4">
+						<p class="text-xs font-medium text-neutral-500">Accuracy</p>
+						<div class="mt-1 flex items-center gap-2 text-sm text-neutral-600">
+							<svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+								<rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+								<path d="M7 11V7a5 5 0 0 1 10 0v4" />
+							</svg>
+							<span>Analyze games</span>
+						</div>
+					</div>
+					<div class="rounded-sm border border-neutral-800 bg-neutral-900 p-4">
+						<p class="text-xs font-medium text-neutral-500">Centipawn Loss</p>
+						<div class="mt-1 flex items-center gap-2 text-sm text-neutral-600">
+							<svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+								<rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+								<path d="M7 11V7a5 5 0 0 1 10 0v4" />
+							</svg>
+							<span>Analyze games</span>
+						</div>
+					</div>
+				{/if}
+				{#if hasAnalysis}
+					<div class="rounded-sm border border-neutral-800 bg-neutral-900 p-4">
+						<p class="text-xs font-medium text-neutral-500">Games Analyzed</p>
+						<p class="mt-1 text-2xl font-bold text-neutral-200">{summary.analyzedGames ?? 0}</p>
+					</div>
+				{:else}
+					<div class="rounded-sm border border-neutral-800 bg-neutral-900 p-4">
+						<p class="text-xs font-medium text-neutral-500">Total Games</p>
+						<p class="mt-1 text-2xl font-bold text-neutral-200">{summary.totalGames ?? 0}</p>
+					</div>
+				{/if}
 				<div class="rounded-sm border border-neutral-800 bg-neutral-900 p-4">
 					<p class="text-xs font-medium text-neutral-500">Win Rate</p>
 					<p class="mt-1 text-2xl font-bold text-neutral-200">{winRate}%</p>
@@ -65,42 +99,70 @@
 			</div>
 
 			<!-- Error rates -->
-			<div class="grid grid-cols-3 gap-3">
-				<div class="rounded-sm border border-neutral-800 bg-neutral-900 p-4 text-center">
-					<p class="text-xl font-bold text-red-400">{summary.avgBlunders?.toFixed(1) ?? '--'}</p>
-					<p class="mt-1 text-xs text-neutral-500">Blunders / game</p>
+			{#if hasAnalysis}
+				<div class="grid grid-cols-3 gap-3">
+					<div class="rounded-sm border border-neutral-800 bg-neutral-900 p-4 text-center">
+						<p class="text-xl font-bold text-red-400">{summary.avgBlunders?.toFixed(1) ?? '--'}</p>
+						<p class="mt-1 text-xs text-neutral-500">Blunders / game</p>
+					</div>
+					<div class="rounded-sm border border-neutral-800 bg-neutral-900 p-4 text-center">
+						<p class="text-xl font-bold text-orange-400">{summary.avgMistakes?.toFixed(1) ?? '--'}</p>
+						<p class="mt-1 text-xs text-neutral-500">Mistakes / game</p>
+					</div>
+					<div class="rounded-sm border border-neutral-800 bg-neutral-900 p-4 text-center">
+						<p class="text-xl font-bold text-yellow-400">
+							{summary.avgInaccuracies?.toFixed(1) ?? '--'}
+						</p>
+						<p class="mt-1 text-xs text-neutral-500">Inaccuracies / game</p>
+					</div>
 				</div>
-				<div class="rounded-sm border border-neutral-800 bg-neutral-900 p-4 text-center">
-					<p class="text-xl font-bold text-orange-400">{summary.avgMistakes?.toFixed(1) ?? '--'}</p>
-					<p class="mt-1 text-xs text-neutral-500">Mistakes / game</p>
+			{:else}
+				<div class="rounded-sm border border-neutral-800 bg-neutral-900 p-4">
+					<div class="flex items-center justify-between">
+						<div>
+							<p class="text-sm text-neutral-500">Error Rates (Blunders, Mistakes, Inaccuracies)</p>
+							<p class="mt-1 text-xs text-neutral-600">Analyze your games to unlock this insight</p>
+						</div>
+						<a href="/games" class="text-xs font-medium text-gold hover:underline">Go to Games</a>
+					</div>
 				</div>
-				<div class="rounded-sm border border-neutral-800 bg-neutral-900 p-4 text-center">
-					<p class="text-xl font-bold text-yellow-400">
-						{summary.avgInaccuracies?.toFixed(1) ?? '--'}
-					</p>
-					<p class="mt-1 text-xs text-neutral-500">Inaccuracies / game</p>
-				</div>
-			</div>
+			{/if}
 
 			<!-- Charts grid: 2 columns on desktop -->
 			<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
 				<!-- Accuracy Trend -->
-				{#if trends?.length > 0}
+				{#if hasAnalysis && analyzedTrends.length > 0}
 					<div class="rounded-sm border border-neutral-800 bg-neutral-900 p-5">
 						<h3 class="mb-3 text-sm font-medium text-neutral-300">Accuracy Trend</h3>
-						<AccuracyTrend {trends} />
+						<AccuracyTrend trends={analyzedTrends} />
+					</div>
+				{:else if !hasAnalysis}
+					<div class="rounded-sm border border-neutral-800 bg-neutral-900 p-5">
+						<h3 class="mb-3 text-sm font-medium text-neutral-300">Accuracy Trend</h3>
+						<div class="flex h-56 flex-col items-center justify-center gap-2">
+							<p class="text-sm text-neutral-600">Analyze your games to unlock this insight</p>
+							<a href="/games" class="text-xs font-medium text-gold hover:underline">Go to Games</a>
+						</div>
 					</div>
 				{/if}
 
 				<!-- Error Breakdown -->
-				{#if trends?.length > 0}
+				{#if hasAnalysis && analyzedTrends.length > 0}
 					<div class="rounded-sm border border-neutral-800 bg-neutral-900 p-5">
 						<h3 class="mb-3 text-sm font-medium text-neutral-300">Error Breakdown (last 20)</h3>
-						<ErrorBreakdown {trends} />
+						<ErrorBreakdown trends={analyzedTrends} />
+					</div>
+				{:else if !hasAnalysis}
+					<div class="rounded-sm border border-neutral-800 bg-neutral-900 p-5">
+						<h3 class="mb-3 text-sm font-medium text-neutral-300">Error Breakdown (last 20)</h3>
+						<div class="flex h-56 flex-col items-center justify-center gap-2">
+							<p class="text-sm text-neutral-600">Analyze your games to unlock this insight</p>
+							<a href="/games" class="text-xs font-medium text-gold hover:underline">Go to Games</a>
+						</div>
 					</div>
 				{/if}
 
-				<!-- Result Distribution -->
+				<!-- Result Distribution (sync-only) -->
 				{#if summary.resultDistribution}
 					<div class="rounded-sm border border-neutral-800 bg-neutral-900 p-5">
 						<h3 class="mb-3 text-sm font-medium text-neutral-300">Results</h3>
@@ -113,15 +175,23 @@
 				{/if}
 
 				<!-- Time Control Performance -->
-				{#if summary.byTimeControl && Object.keys(summary.byTimeControl).length > 0}
+				{#if hasAnalysis && summary.byTimeControl && Object.keys(summary.byTimeControl).length > 0}
 					<div class="rounded-sm border border-neutral-800 bg-neutral-900 p-5">
 						<h3 class="mb-3 text-sm font-medium text-neutral-300">By Time Control</h3>
 						<TimeControlPerf byTimeControl={summary.byTimeControl} />
 					</div>
+				{:else if !hasAnalysis}
+					<div class="rounded-sm border border-neutral-800 bg-neutral-900 p-5">
+						<h3 class="mb-3 text-sm font-medium text-neutral-300">By Time Control</h3>
+						<div class="flex h-56 flex-col items-center justify-center gap-2">
+							<p class="text-sm text-neutral-600">Analyze your games to unlock this insight</p>
+							<a href="/games" class="text-xs font-medium text-gold hover:underline">Go to Games</a>
+						</div>
+					</div>
 				{/if}
 			</div>
 
-			<!-- Rating over time (full width) -->
+			<!-- Rating over time (full width, sync-only) -->
 			{#if trends?.length > 0}
 				<div class="rounded-sm border border-neutral-800 bg-neutral-900 p-5">
 					<h3 class="mb-3 text-sm font-medium text-neutral-300">Rating Over Time</h3>
@@ -129,7 +199,7 @@
 				</div>
 			{/if}
 
-			<!-- Top Openings (full width, CSS bars) -->
+			<!-- Top Openings (full width, sync-only) -->
 			{#if summary.topOpenings?.length > 0}
 				<div>
 					<h2 class="mb-3 text-sm font-medium text-neutral-300">Top Openings</h2>
@@ -161,7 +231,7 @@
 		{:else}
 			<EmptyState
 				title="No insights yet"
-				description="Sync and analyze your Lichess games to unlock insights about your play."
+				description="Sync your Lichess games to start seeing insights about your play."
 				actionLabel="Go to Settings"
 				actionHref="/settings"
 			/>

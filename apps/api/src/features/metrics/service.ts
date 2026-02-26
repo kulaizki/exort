@@ -133,18 +133,16 @@ export class MetricsService {
       orderBy: { playedAt: 'asc' }
     });
 
-    return games
-      .filter((g) => g.metrics)
-      .map((g) => ({
-        date: g.playedAt,
-        accuracy: g.metrics!.accuracy,
-        blunders: g.metrics!.blunderCount,
-        mistakes: g.metrics!.mistakeCount,
-        inaccuracies: g.metrics!.inaccuracyCount,
-        centipawnLoss: g.metrics!.centipawnLoss,
-        result: g.result,
-        playerRating: g.playerRating,
-        timeControl: g.timeControl
-      }));
+    return games.map((g) => ({
+      date: g.playedAt,
+      accuracy: g.metrics?.accuracy ?? null,
+      blunders: g.metrics?.blunderCount ?? null,
+      mistakes: g.metrics?.mistakeCount ?? null,
+      inaccuracies: g.metrics?.inaccuracyCount ?? null,
+      centipawnLoss: g.metrics?.centipawnLoss ?? null,
+      result: g.result,
+      playerRating: g.playerRating,
+      timeControl: g.timeControl
+    }));
   }
 }
