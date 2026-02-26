@@ -237,20 +237,22 @@ Feature module: `$lib/features/coach/`. Route: `/coach`.
   - [x] Input bar with send button
   - [x] Suggested prompts: "What are my biggest weaknesses?", "How can I improve my endgame?", "Analyze my opening repertoire"
   - [ ] Context indicator: shows what data the coach sees (last N games, metrics summary)
-  - [ ] Streaming response display (currently non-streaming)
-  - [ ] Markdown rendering in assistant messages
-- [ ] API integration (routes defined in Phase 4, service logic pending):
-  - [ ] On message send, retrieve structured context from PostgreSQL:
-    - [ ] Recent N games with metrics
-    - [ ] Top blunders / worst games (from move_evaluations)
-    - [ ] Opening frequency stats
-    - [ ] Trend aggregates (improvement/decline)
-    - [ ] If game_id linked: full game metrics + move evaluations for that game
-  - [ ] Build context payload (structured JSON)
-  - [ ] Call Gemini 2.5 Flash via Google AI API with system prompt + context + user question
-  - [ ] System prompt: chess coach persona, reference metrics, give actionable advice
-  - [ ] Store message + response in `chat_messages`
-  - [ ] Return response (streaming preferred)
+  - [x] Streaming response display (SSE streaming)
+  - [x] Markdown rendering in assistant messages
+  - [x] Auto-generated session titles from first user message
+  - [x] Lichess context injected into system prompt
+- [x] API integration (Gemini function-calling RAG pipeline):
+  - [x] On message send, retrieve structured context from PostgreSQL:
+    - [x] Recent N games with metrics
+    - [x] Top blunders / worst games (from move_evaluations)
+    - [x] Opening frequency stats
+    - [x] Trend aggregates (improvement/decline)
+    - [x] If game_id linked: full game metrics + move evaluations for that game
+  - [x] Build context payload (structured JSON)
+  - [x] Call Gemini 2.5 Flash via Google AI API with system prompt + context + user question
+  - [x] System prompt: chess coach persona, reference metrics, give actionable advice
+  - [x] Store message + response in `chat_messages`
+  - [x] Return response (SSE streaming)
 - [ ] Context limits (don't exceed token budget — trim oldest games first)
 
 ## Phase 9: Deploy
@@ -309,7 +311,7 @@ Tests colocated with features: `features/[name]/__tests__/[name].test.ts`
 - [ ] Error boundaries / empty states
 - [ ] Loading skeletons on all async pages
 - [ ] Responsive design pass (mobile-first)
-- [ ] Rate limiting on API endpoints
+- [x] Rate limiting on API endpoints
 - [ ] Security headers (CSP, HSTS, X-Frame-Options)
 - [ ] Monitoring / logging (Cloud Run built-in + structured logs)
 - [ ] README.md with setup instructions
