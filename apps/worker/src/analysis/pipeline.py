@@ -2,13 +2,23 @@ import io
 from dataclasses import dataclass, field
 
 import chess
+import chess.engine
 import chess.pgn
-from stockfish import Stockfish
 
-from src.config import ANALYSIS_NODES, ANALYSIS_DEPTH, STOCKFISH_PATH, STOCKFISH_THREADS, STOCKFISH_HASH_MB
+from src.config import (
+    ANALYSIS_DEPTH,
+    ANALYSIS_NODES,
+    STOCKFISH_HASH_MB,
+    STOCKFISH_PATH,
+    STOCKFISH_THREADS,
+)
 from src.analysis.classifier import classify_move
 from src.analysis.accuracy import calculate_accuracy
 from src.analysis.phase import aggregate_phase_errors
+
+
+MATE_SCORE = 10000
+DEFAULT_DEPTH = 18
 
 
 @dataclass
@@ -40,26 +50,35 @@ class AnalysisResult:
     moves: list[MoveEval] = field(default_factory=list)
 
 
-def _cp_from_info(info: dict) -> int | None:
-    if info is None:
-        return None
-    eval_type = info.get("type")
-    value = info.get("value")
-    if eval_type == "mate" and value is not None:
-        return 10000 if value > 0 else -10000
-    if eval_type == "cp" and value is not None:
-        return value
+def _build_limit() -> chess.engine.Limit:
+    kwargs: dict = {}
+    if ANALYSIS_NODES > 0:
+        kwargs["nodes"] = ANALYSIS_NODES
+    if ANALYSIS_DEPTH > 0:
+        kwargs["depth"] = ANALYSIS_DEPTH
+    if not kwargs:
+        kwargs["depth"] = DEFAULT_DEPTH
+    return chess.engine.Limit(**kwargs)
+
+
+def _info_to_cp(info: chess.engine.InfoDict) -> int:
+    score = info.get("score")
+    if score is None:
+        return 0
+    return score.white().score(mate_score=MATE_SCORE)
+
+
+def _info_to_best_uci(info: chess.engine.InfoDict) -> str | None:
+    pv = info.get("pv")
+    if pv:
+        return pv[0].uci()
     return None
 
 
-def _cp_from_top(top: list[dict]) -> int | None:
-    if not top:
-        return None
-    entry = top[0]
-    mate = entry.get("Mate")
-    if mate is not None:
-        return 10000 if mate > 0 else -10000
-    return entry.get("Centipawn")
+def _terminal_cp(board: chess.Board, mover_was_white: bool) -> int:
+    if board.is_checkmate():
+        return MATE_SCORE if mover_was_white else -MATE_SCORE
+    return 0
 
 
 def analyze_game(pgn: str, game_id: str) -> AnalysisResult:
@@ -71,60 +90,61 @@ def analyze_game(pgn: str, game_id: str) -> AnalysisResult:
     opening_name = headers.get("Opening") or headers.get("Variant") or None
     opening_eco = headers.get("ECO") or None
 
-    sf = Stockfish(
-        path=STOCKFISH_PATH,
-        depth=ANALYSIS_DEPTH if ANALYSIS_DEPTH > 0 else 18,
-        parameters={"Threads": STOCKFISH_THREADS, "Hash": STOCKFISH_HASH_MB},
-    )
-
+    limit = _build_limit()
+    engine = chess.engine.SimpleEngine.popen_uci(STOCKFISH_PATH)
     move_evals: list[MoveEval] = []
-    board = game.board()
-    total_moves_node = game.end()
-    total_plies = total_moves_node.ply()
-    total_moves = (total_plies + 1) // 2
 
-    node = game
-    while not node.is_end():
-        next_node = node.variation(0)
-        played_move = next_node.move
+    try:
+        engine.configure({"Threads": STOCKFISH_THREADS, "Hash": STOCKFISH_HASH_MB})
 
-        sf.set_fen_position(board.fen())
-        top = sf.get_top_moves(1, num_nodes=ANALYSIS_NODES)
-        before_cp = _cp_from_top(top) or 0
-        best_move_result = top[0]["Move"] if top else None
+        board = game.board()
+        total_plies = game.end().ply()
+        total_moves = (total_plies + 1) // 2
 
-        board.push(played_move)
+        before_info = engine.analyse(board, limit)
+        before_cp = _info_to_cp(before_info)
+        best_move_uci = _info_to_best_uci(before_info)
 
-        sf.set_fen_position(board.fen())
-        after_top = sf.get_top_moves(1, num_nodes=ANALYSIS_NODES)
-        after_cp = _cp_from_top(after_top) or 0
+        node = game
+        while not node.is_end():
+            next_node = node.variation(0)
+            played_move = next_node.move
+            mover_was_white = board.turn == chess.WHITE
 
-        ply = next_node.ply()
-        move_number = (ply + 1) // 2
-        color = "white" if board.turn == chess.BLACK else "black"
+            board.push(played_move)
 
-        if color == "white":
-            cp_loss = max(0, before_cp - after_cp)
-            eval_cp = after_cp
-        else:
-            cp_loss = max(0, after_cp - before_cp)
-            eval_cp = after_cp
+            if board.is_game_over(claim_draw=False):
+                after_cp = _terminal_cp(board, mover_was_white)
+                next_best_uci = None
+            else:
+                after_info = engine.analyse(board, limit)
+                after_cp = _info_to_cp(after_info)
+                next_best_uci = _info_to_best_uci(after_info)
 
-        classification = classify_move(float(cp_loss))
+            if mover_was_white:
+                cp_loss = max(0, before_cp - after_cp)
+            else:
+                cp_loss = max(0, after_cp - before_cp)
 
-        move_evals.append(MoveEval(
-            move_number=move_number,
-            color=color,
-            eval_cp=eval_cp,
-            cp_loss=cp_loss,
-            best_move_uci=best_move_result,
-            played_move_uci=played_move.uci(),
-            classification=classification,
-        ))
+            ply = next_node.ply()
+            move_number = (ply + 1) // 2
+            color = "white" if mover_was_white else "black"
 
-        node = next_node
+            move_evals.append(MoveEval(
+                move_number=move_number,
+                color=color,
+                eval_cp=after_cp,
+                cp_loss=cp_loss,
+                best_move_uci=best_move_uci,
+                played_move_uci=played_move.uci(),
+                classification=classify_move(float(cp_loss)),
+            ))
 
-    del sf
+            before_cp = after_cp
+            best_move_uci = next_best_uci
+            node = next_node
+    finally:
+        engine.quit()
 
     cp_losses = [m.cp_loss for m in move_evals]
     accuracy = calculate_accuracy(cp_losses)
